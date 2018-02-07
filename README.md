@@ -1,3 +1,6 @@
+## This project is work in progress, and is adding support for Bitcoin-Nano
+
+
 # c-lightning: A specification compliant Lightning Network implementation in C
 
 c-lightning is a [standard compliant](https://github.com/lightningnetwork/lightning-rfc) implementation of the Lightning Network protocol.
