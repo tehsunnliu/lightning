@@ -16,8 +16,7 @@ BTCNANO_SRC :=					\
 
 BTCNANO_OBJS := $(BTCNANO_SRC:.c=.o)
 
-BTCNANO_HEADERS := 
-	btcnano/address.h			\
+BTCNANO_HEADERS := btcnano/address.h			\
 	btcnano/base58.h			\
 	btcnano/block.h				\
 	btcnano/chainparams.h		\
