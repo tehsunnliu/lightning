@@ -1,4 +1,4 @@
-#include "bitcoind.h"
+#include "btcnanod.h"
 #include "chaintopology.h"
 #include "gossip_control.h"
 #include "lightningd.h"
@@ -57,8 +57,8 @@ static void peer_nongossip(struct subd *gossip, const u8 *msg,
 			    peer_fd, gossip_fd, in_pkt);
 }
 
-static void got_txout(struct bitcoind *bitcoind,
-		      const struct bitcoin_tx_output *output,
+static void got_txout(struct btcnanod *btcnanod,
+		      const struct btcnano_tx_output *output,
 		      struct short_channel_id *scid)
 {
 	const u8 *script;
@@ -69,7 +69,7 @@ static void got_txout(struct bitcoind *bitcoind,
 	else
 		script = NULL;
 
-	subd_send_msg(bitcoind->ld->gossip,
+	subd_send_msg(btcnanod->ld->gossip,
 		      towire_gossip_get_txout_reply(scid, scid, script));
 	tal_free(scid);
 }
@@ -84,7 +84,7 @@ static void get_txout(struct subd *gossip, const u8 *msg)
 
 	/* FIXME: Block less than 6 deep? */
 
-	bitcoind_getoutput(gossip->ld->topology->bitcoind,
+	btcnanod_getoutput(gossip->ld->topology->btcnanod,
 			   scid->blocknum, scid->txnum, scid->outnum,
 			   got_txout, scid);
 }
