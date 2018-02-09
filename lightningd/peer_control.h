@@ -69,7 +69,7 @@ struct peer {
 	u64 next_htlc_id;
 
 	/* Funding txid and amounts (once known) */
-	struct bitcoin_txid *funding_txid;
+	struct btcnano_txid *funding_txid;
 	u16 funding_outnum;
 	u64 funding_satoshi, push_msat;
 	bool remote_funding_locked;
@@ -80,7 +80,7 @@ struct peer {
 	u64 *our_msatoshi;
 
 	/* Last tx they gave us (if any). */
-	struct bitcoin_tx *last_tx;
+	struct btcnano_tx *last_tx;
 	secp256k1_ecdsa_signature *last_sig;
 	secp256k1_ecdsa_signature *last_htlc_sigs;
 
@@ -163,7 +163,7 @@ struct peer *peer_from_json(struct lightningd *ld,
 			    const char *buffer,
 			    jsmntok_t *peeridtok);
 
-void peer_last_tx(struct peer *peer, struct bitcoin_tx *tx,
+void peer_last_tx(struct peer *peer, struct btcnano_tx *tx,
 		  const secp256k1_ecdsa_signature *sig);
 
 /* The three ways peers enter from the network:

@@ -2,8 +2,8 @@
 #include "peer_control.h"
 #include "subd.h"
 #include <arpa/inet.h>
-#include <bitcoin/script.h>
-#include <bitcoin/tx.h>
+#include <btcnano/script.h>
+#include <btcnano/tx.h>
 #include <ccan/fdpass/fdpass.h>
 #include <ccan/io/io.h>
 #include <ccan/noerr/noerr.h>
@@ -28,7 +28,7 @@
 #include <hsmd/capabilities.h>
 #include <hsmd/gen_hsm_client_wire.h>
 #include <inttypes.h>
-#include <lightningd/bitcoind.h>
+#include <lightningd/btcnanod.h>
 #include <lightningd/build_utxos.h>
 #include <lightningd/chaintopology.h>
 #include <lightningd/gen_peer_state_names.h>
@@ -137,7 +137,7 @@ static void sign_last_tx(struct peer *peer)
 	derive_basepoints(peer->seed, &local_funding_pubkey, NULL, &secrets,
 			  NULL);
 
-	funding_wscript = bitcoin_redeem_2of2(tmpctx,
+	funding_wscript = btcnano_redeem_2of2(tmpctx,
 					      &local_funding_pubkey,
 					      &peer->channel_info->remote_fundingkey);
 	/* Need input amount for signing */
@@ -149,7 +149,7 @@ static void sign_last_tx(struct peer *peer)
 		      &sig);
 
 	peer->last_tx->input[0].witness
-		= bitcoin_witness_2of2(peer->last_tx->input,
+		= btcnano_witness_2of2(peer->last_tx->input,
 				       peer->last_sig,
 				       &sig,
 				       &peer->channel_info->remote_fundingkey,
@@ -158,7 +158,7 @@ static void sign_last_tx(struct peer *peer)
 	tal_free(tmpctx);
 }
 
-static void remove_sig(struct bitcoin_tx *signed_tx)
+static void remove_sig(struct btcnano_tx *signed_tx)
 {
 	signed_tx->input[0].amount = tal_free(signed_tx->input[0].amount);
 	signed_tx->input[0].witness = tal_free(signed_tx->input[0].witness);
@@ -1001,7 +1001,7 @@ static void funding_broadcast_failed(struct peer *peer,
 }
 
 static enum watch_result funding_announce_cb(struct peer *peer,
-					     const struct bitcoin_tx *tx,
+					     const struct btcnano_tx *tx,
 					     unsigned int depth,
 					     void *unused)
 {
@@ -1081,12 +1081,12 @@ static void handle_onchain_init_reply(struct peer *peer, const u8 *msg)
 }
 
 static enum watch_result onchain_tx_watched(struct peer *peer,
-					    const struct bitcoin_tx *tx,
+					    const struct btcnano_tx *tx,
 					    unsigned int depth,
 					    void *unused)
 {
 	u8 *msg;
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 
 	if (depth == 0) {
 		log_unusual(peer->log, "Chain reorganization!");
@@ -1100,17 +1100,17 @@ static enum watch_result onchain_tx_watched(struct peer *peer,
 		return KEEP_WATCHING;
 	}
 
-	bitcoin_txid(tx, &txid);
+	btcnano_txid(tx, &txid);
 	msg = towire_onchain_depth(peer, &txid, depth);
 	subd_send_msg(peer->owner, take(msg));
 	return KEEP_WATCHING;
 }
 
 static void watch_tx_and_outputs(struct peer *peer,
-				 const struct bitcoin_tx *tx);
+				 const struct btcnano_tx *tx);
 
 static enum watch_result onchain_txo_watched(struct peer *peer,
-					     const struct bitcoin_tx *tx,
+					     const struct btcnano_tx *tx,
 					     size_t input_num,
 					     const struct block *block,
 					     void *unused)
@@ -1130,12 +1130,12 @@ static enum watch_result onchain_txo_watched(struct peer *peer,
 
 /* To avoid races, we watch the tx and all outputs. */
 static void watch_tx_and_outputs(struct peer *peer,
-				 const struct bitcoin_tx *tx)
+				 const struct btcnano_tx *tx)
 {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	struct txwatch *txw;
 
-	bitcoin_txid(tx, &txid);
+	btcnano_txid(tx, &txid);
 
 	/* Make txwatch a parent of txo watches, so we can unwatch together. */
 	txw = watch_tx(peer->owner, peer->ld->topology, peer, tx,
@@ -1148,9 +1148,9 @@ static void watch_tx_and_outputs(struct peer *peer,
 
 static void handle_onchain_broadcast_tx(struct peer *peer, const u8 *msg)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 
-	tx = tal(msg, struct bitcoin_tx);
+	tx = tal(msg, struct btcnano_tx);
 	if (!fromwire_onchain_broadcast_tx(msg, NULL, tx)) {
 		peer_internal_error(peer, "Invalid onchain_broadcast_tx");
 		return;
@@ -1162,7 +1162,7 @@ static void handle_onchain_broadcast_tx(struct peer *peer, const u8 *msg)
 
 static void handle_onchain_unwatch_tx(struct peer *peer, const u8 *msg)
 {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	struct txwatch *txw;
 
 	if (!fromwire_onchain_unwatch_tx(msg, NULL, &txid)) {
@@ -1174,7 +1174,7 @@ static void handle_onchain_unwatch_tx(struct peer *peer, const u8 *msg)
 	txw = find_txwatch(peer->ld->topology, &txid, peer);
 	if (!txw)
 		log_unusual(peer->log, "Can't unwatch txid %s",
-			    type_to_string(ltmp, struct bitcoin_txid, &txid));
+			    type_to_string(ltmp, struct btcnano_txid, &txid));
 	tal_free(txw);
 }
 
@@ -1392,13 +1392,13 @@ static bool tell_if_missing(const struct peer *peer, struct htlc_stub *stub,
 /* With a reorg, this can get called multiple times; each time we'll kill
  * onchaind (like any other owner), and restart */
 static enum watch_result funding_spent(struct peer *peer,
-				       const struct bitcoin_tx *tx,
+				       const struct btcnano_tx *tx,
 				       size_t input_num,
 				       const struct block *block,
 				       void *unused)
 {
 	u8 *msg, *scriptpubkey;
-	struct bitcoin_txid our_last_txid;
+	struct btcnano_txid our_last_txid;
 	s64 keyindex;
 	struct pubkey ourkey;
 	struct htlc_stub *stubs;
@@ -1459,7 +1459,7 @@ static enum watch_result funding_spent(struct peer *peer,
 	}
 
 	/* This could be a mutual close, but it doesn't matter. */
-	bitcoin_txid(peer->last_tx, &our_last_txid);
+	btcnano_txid(peer->last_tx, &our_last_txid);
 
 	msg = towire_onchain_init(peer, peer->seed, &peer->their_shachain.chain,
 				  peer->funding_satoshi,
@@ -1510,17 +1510,17 @@ static enum watch_result funding_spent(struct peer *peer,
 }
 
 static enum watch_result funding_lockin_cb(struct peer *peer,
-					   const struct bitcoin_tx *tx,
+					   const struct btcnano_tx *tx,
 					   unsigned int depth,
 					   void *unused)
 {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	const char *txidstr;
 	struct txlocator *loc;
 	bool peer_ready;
 
-	bitcoin_txid(tx, &txid);
-	txidstr = type_to_string(peer, struct bitcoin_txid, &txid);
+	btcnano_txid(tx, &txid);
+	txidstr = type_to_string(peer, struct btcnano_txid, &txid);
 	log_debug(peer->log, "Funding tx %s depth %u of %u",
 		  txidstr, depth, peer->minimum_depth);
 	tal_free(txidstr);
@@ -1581,7 +1581,7 @@ static void opening_got_hsm_funding_sig(struct funding_channel *fc,
 					const struct crypto_state *cs,
 					u64 gossip_index)
 {
-	struct bitcoin_tx *tx = tal(fc, struct bitcoin_tx);
+	struct btcnano_tx *tx = tal(fc, struct btcnano_tx);
 	u8 *linear;
 	u64 change_satoshi;
 	struct json_result *response = new_json_result(fc->cmd);
@@ -1724,7 +1724,7 @@ static void peer_got_shutdown(struct peer *peer, const u8 *msg)
 	wallet_channel_save(peer->ld->wallet, peer->channel);
 }
 
-void peer_last_tx(struct peer *peer, struct bitcoin_tx *tx,
+void peer_last_tx(struct peer *peer, struct btcnano_tx *tx,
 		  const secp256k1_ecdsa_signature *sig)
 {
 	tal_free(peer->last_sig);
@@ -1736,7 +1736,7 @@ void peer_last_tx(struct peer *peer, struct bitcoin_tx *tx,
 /* Is this better than the last tx we were holding?  This can happen
  * even without closingd misbehaving, if we have multiple,
  * interrupted, rounds of negotiation. */
-static bool better_closing_fee(struct peer *peer, const struct bitcoin_tx *tx)
+static bool better_closing_fee(struct peer *peer, const struct btcnano_tx *tx)
 {
 	u64 weight, fee, last_fee, ideal_fee, min_fee;
 	s64 old_diff, new_diff;
@@ -1788,7 +1788,7 @@ static bool better_closing_fee(struct peer *peer, const struct bitcoin_tx *tx)
 static void peer_received_closing_signature(struct peer *peer, const u8 *msg)
 {
 	secp256k1_ecdsa_signature sig;
-	struct bitcoin_tx *tx = tal(msg, struct bitcoin_tx);
+	struct btcnano_tx *tx = tal(msg, struct btcnano_tx);
 
 	if (!fromwire_closing_received_signature(msg, NULL, &sig, tx)) {
 		peer_internal_error(peer, "Bad closing_received_signature %s",
@@ -2207,13 +2207,13 @@ static void opening_funder_finished(struct subd *opening, const u8 *resp,
 	u8 *msg;
 	struct channel_info *channel_info;
 	struct utxo *utxos;
-	struct bitcoin_tx *fundingtx;
-	struct bitcoin_txid funding_txid;
+	struct btcnano_tx *fundingtx;
+	struct btcnano_txid funding_txid;
 	struct pubkey changekey;
 	struct pubkey local_fundingkey;
 	struct crypto_state cs;
 	secp256k1_ecdsa_signature remote_commit_sig;
-	struct bitcoin_tx *remote_commit;
+	struct btcnano_tx *remote_commit;
 	u64 gossip_index;
 
 	assert(tal_count(fds) == 2);
@@ -2221,7 +2221,7 @@ static void opening_funder_finished(struct subd *opening, const u8 *resp,
 	/* At this point, we care about peer */
 	fc->peer->channel_info = channel_info
 		= tal(fc->peer, struct channel_info);
-	remote_commit = tal(resp, struct bitcoin_tx);
+	remote_commit = tal(resp, struct btcnano_tx);
 
 	/* This is a new channel_info->their_config so set its ID to 0 */
 	fc->peer->channel_info->their_config.id = 0;
@@ -2278,12 +2278,12 @@ static void opening_funder_finished(struct subd *opening, const u8 *resp,
 		log_debug(fc->peer->log, "%zi: %"PRIu64" satoshi (%s) %s\n",
 			  i, fc->utxomap[i]->amount,
 			  fc->utxomap[i]->is_p2sh ? "P2SH" : "SEGWIT",
-			  type_to_string(ltmp, struct bitcoin_txid,
+			  type_to_string(ltmp, struct btcnano_txid,
 					 &fundingtx->input[i].txid));
 	}
 
-	fc->peer->funding_txid = tal(fc->peer, struct bitcoin_txid);
-	bitcoin_txid(fundingtx, fc->peer->funding_txid);
+	fc->peer->funding_txid = tal(fc->peer, struct btcnano_txid);
+	btcnano_txid(fundingtx, fc->peer->funding_txid);
 
 	if (!structeq(fc->peer->funding_txid, &funding_txid)) {
 		peer_internal_error(fc->peer,
@@ -2336,20 +2336,20 @@ static void opening_fundee_finished(struct subd *opening,
 	struct crypto_state cs;
 	u64 gossip_index;
 	secp256k1_ecdsa_signature remote_commit_sig;
-	struct bitcoin_tx *remote_commit;
+	struct btcnano_tx *remote_commit;
 	const tal_t *tmpctx = tal_tmpctx(peer);
 
 	log_debug(peer->log, "Got opening_fundee_finish_response");
 	assert(tal_count(fds) == 2);
 
-	remote_commit = tal(reply, struct bitcoin_tx);
+	remote_commit = tal(reply, struct btcnano_tx);
 
 	/* At this point, we care about peer */
 	peer->channel_info = channel_info = tal(peer, struct channel_info);
 	/* This is a new channel_info->their_config, set its ID to 0 */
 	peer->channel_info->their_config.id = 0;
 
-	peer->funding_txid = tal(peer, struct bitcoin_txid);
+	peer->funding_txid = tal(peer, struct btcnano_txid);
 	if (!fromwire_opening_fundee_reply(tmpctx, reply, NULL,
 					   &channel_info->their_config,
 					   remote_commit,
@@ -2391,7 +2391,7 @@ static void opening_fundee_finished(struct subd *opening,
 	}
 
 	log_debug(peer->log, "Watching funding tx %s",
-		     type_to_string(reply, struct bitcoin_txid,
+		     type_to_string(reply, struct btcnano_txid,
 				    peer->funding_txid));
 	watch_txid(peer, peer->ld->topology, peer, peer->funding_txid,
 		   funding_lockin_cb, NULL);
@@ -2953,8 +2953,8 @@ struct dev_forget_channel_cmd {
 	struct command *cmd;
 };
 
-static void process_dev_forget_channel(struct bitcoind *bitcoind UNUSED,
-				       const struct bitcoin_tx_output *txout,
+static void process_dev_forget_channel(struct btcnanod *btcnanod UNUSED,
+				       const struct btcnano_tx_output *txout,
 				       void *arg)
 {
 	struct json_result *response;
@@ -3006,9 +3006,9 @@ static void json_dev_forget_channel(struct command *cmd, const char *buffer,
 	if (!forget->peer)
 		command_fail(cmd, "Could not find channel with that peer");
 	if (!forget->peer->funding_txid) {
-		process_dev_forget_channel(cmd->ld->topology->bitcoind, NULL, forget);
+		process_dev_forget_channel(cmd->ld->topology->btcnanod, NULL, forget);
 	} else {
-		bitcoind_gettxout(cmd->ld->topology->bitcoind,
+		btcnanod_gettxout(cmd->ld->topology->btcnanod,
 				  forget->peer->funding_txid,
 				  forget->peer->funding_outnum,
 				  process_dev_forget_channel, forget);
