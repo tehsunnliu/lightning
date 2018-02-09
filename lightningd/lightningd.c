@@ -22,7 +22,8 @@
 #include <common/utils.h>
 #include <common/version.h>
 #include <common/wireaddr.h>
-#include <lightningd/bitcoind.h>
+//#include <lightningd/bitcoind.h>
+#include <lightningd/btcnanod.h>
 #include <lightningd/chaintopology.h>
 #include <lightningd/invoice.h>
 #include <lightningd/jsonrpc.h>
@@ -33,12 +34,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-char *bitcoin_datadir;
+char *btcnano_datadir;
 
 struct backtrace_state *backtrace_state;
 
-static struct lightningd *new_lightningd(const tal_t *ctx,
-					 struct log_book *log_book)
+static struct lightningd *new_lightningd(const tal_t *ctx, struct log_book *log_book)
 {
 	struct lightningd *ld = tal(ctx, struct lightningd);
 
@@ -221,7 +221,7 @@ static void shutdown_subdaemons(struct lightningd *ld)
 struct chainparams *get_chainparams(const struct lightningd *ld)
 {
 	return cast_const(struct chainparams *,
-			  ld->topology->bitcoind->chainparams);
+			  ld->topology->btcnanod->chainparams);
 }
 
 static void init_txfilter(struct wallet *w, struct txfilter *filter)

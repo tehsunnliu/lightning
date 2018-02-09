@@ -1,8 +1,8 @@
 #ifndef LIGHTNING_LIGHTNINGD_LIGHTNINGD_H
 #define LIGHTNING_LIGHTNINGD_LIGHTNINGD_H
 #include "config.h"
-#include <bitcoin/chainparams.h>
-#include <bitcoin/privkey.h>
+#include <btcnano/chainparams.h>
+#include <btcnano/privkey.h>
 #include <ccan/container_of/container_of.h>
 #include <ccan/time/time.h>
 #include <ccan/timer/timer.h>
@@ -57,7 +57,7 @@ struct config {
 	u32 fee_base;
 	s32 fee_per_satoshi;
 
-	/* How long between polling bitcoind. */
+	/* How long between polling btcnanod. */
 	struct timerel poll_time;
 
 	/* How long between changing commit and sending COMMIT message. */
