@@ -1,8 +1,8 @@
-#include <bitcoin/address.h>
-#include <bitcoin/privkey.h>
-#include <bitcoin/pubkey.h>
-#include <bitcoin/script.h>
-#include <bitcoin/tx.h>
+#include <btcnano/address.h>
+#include <btcnano/privkey.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/script.h>
+#include <btcnano/tx.h>
 #include <ccan/container_of/container_of.h>
 #include <ccan/crypto/hkdf_sha256/hkdf_sha256.h>
 #include <ccan/endian/endian.h>
@@ -157,10 +157,10 @@ static struct io_plan *handle_cannouncement_sig(struct io_conn *conn,
 	struct sha256_double hash;
 	u8 *reply;
 	u8 *ca;
-	struct pubkey bitcoin_id;
+	struct pubkey btcnano_id;
 
 	if (!fromwire_hsm_cannouncement_sig_req(ctx, dc->msg_in, NULL,
-						&bitcoin_id, &ca)) {
+						&btcnano_id, &ca)) {
 		status_broken("Failed to parse cannouncement_sig_req: %s",
 			      tal_hex(trc, dc->msg_in));
 		return io_close(conn);
@@ -198,7 +198,7 @@ static struct io_plan *handle_channel_update_sig(struct io_conn *conn,
 	u32 timestamp, fee_base_msat, fee_proportional_mill;
 	u64 htlc_minimum_msat;
 	u16 flags, cltv_expiry_delta;
-	struct bitcoin_blkid chain_hash;
+	struct btcnano_blkid chain_hash;
 	u8 *cu;
 
 	if (!fromwire_hsm_cupdate_sig_req(tmpctx, dc->msg_in, NULL, &cu)) {
@@ -380,7 +380,7 @@ static void populate_secretstuff(void)
 	u32 salt = 0;
 	struct ext_key master_extkey, child_extkey;
 
-	/* Fill in the BIP32 tree for bitcoin addresses. */
+	/* Fill in the BIP32 tree for btcnano addresses. */
 	do {
 		hkdf_sha256(bip32_seed, sizeof(bip32_seed),
 			    &salt, sizeof(salt),
@@ -423,7 +423,7 @@ static void populate_secretstuff(void)
 			      "Can't derive private bip32 key");
 }
 
-static void bitcoin_pubkey(struct pubkey *pubkey, u32 index)
+static void btcnano_pubkey(struct pubkey *pubkey, u32 index)
 {
 	struct ext_key ext;
 
@@ -442,7 +442,7 @@ static void bitcoin_pubkey(struct pubkey *pubkey, u32 index)
 			      "Parse of BIP32 child %u pubkey failed", index);
 }
 
-static void bitcoin_keypair(struct privkey *privkey,
+static void btcnano_keypair(struct privkey *privkey,
 			    struct pubkey *pubkey,
 			    u32 index)
 {
@@ -598,7 +598,7 @@ static void hsm_key_for_utxo(struct privkey *privkey, struct pubkey *pubkey,
 		status_debug("Derived public key %s from unilateral close", type_to_string(trc, struct pubkey, pubkey));
 	} else {
 		/* Simple case: just get derive via HD-derivation */
-		bitcoin_keypair(privkey, pubkey, utxo->keyindex);
+		btcnano_keypair(privkey, pubkey, utxo->keyindex);
 	}
 }
 
@@ -612,7 +612,7 @@ static void sign_funding_tx(struct daemon_conn *master, const u8 *msg)
 	struct pubkey local_pubkey, remote_pubkey;
 	struct utxo *inputs;
 	const struct utxo **utxomap;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	u8 *wscript;
 	u16 outnum;
 	size_t i;
@@ -629,7 +629,7 @@ static void sign_funding_tx(struct daemon_conn *master, const u8 *msg)
 	utxomap = to_utxoptr_arr(tmpctx, inputs);
 
 	if (change_out)
-		bitcoin_pubkey(&changekey, change_keyindex);
+		btcnano_pubkey(&changekey, change_keyindex);
 
 	tx = funding_tx(tmpctx, &outnum, utxomap,
 			satoshi_out, &local_pubkey, &remote_pubkey,
@@ -647,7 +647,7 @@ static void sign_funding_tx(struct daemon_conn *master, const u8 *msg)
 		hsm_key_for_utxo(&inprivkey, &inkey, in);
 
 		if (in->is_p2sh)
-			subscript = bitcoin_redeem_p2sh_p2wpkh(tmpctx, &inkey);
+			subscript = btcnano_redeem_p2sh_p2wpkh(tmpctx, &inkey);
 		else
 			subscript = NULL;
 		wscript = p2wpkh_scriptcode(tmpctx, &inkey);
@@ -655,10 +655,10 @@ static void sign_funding_tx(struct daemon_conn *master, const u8 *msg)
 		sign_tx_input(tx, i, subscript, wscript, &inprivkey, &inkey,
 			      &sig);
 
-		tx->input[i].witness = bitcoin_witness_p2wpkh(tx, &sig, &inkey);
+		tx->input[i].witness = btcnano_witness_p2wpkh(tx, &sig, &inkey);
 
 		if (inputs[i].is_p2sh)
-			scriptSigs[i] = bitcoin_scriptsig_p2sh_p2wpkh(tx, &inkey);
+			scriptSigs[i] = btcnano_scriptsig_p2sh_p2wpkh(tx, &inkey);
 		else
 			scriptSigs[i] = NULL;
 	}
@@ -684,7 +684,7 @@ static void sign_withdrawal_tx(struct daemon_conn *master, const u8 *msg)
 	const struct utxo **utxos;
 	u8 *wscript;
 	u8 **scriptSigs;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	struct ext_key ext;
 	struct pubkey changekey;
 	u8 *scriptpubkey;
@@ -722,7 +722,7 @@ static void sign_withdrawal_tx(struct daemon_conn *master, const u8 *msg)
 		hsm_key_for_utxo(&inprivkey, &inkey, in);
 
 		if (in->is_p2sh || in->close_info != NULL)
-			subscript = bitcoin_redeem_p2sh_p2wpkh(tmpctx, &inkey);
+			subscript = btcnano_redeem_p2sh_p2wpkh(tmpctx, &inkey);
 		else
 			subscript = NULL;
 		wscript = p2wpkh_scriptcode(tmpctx, &inkey);
@@ -730,10 +730,10 @@ static void sign_withdrawal_tx(struct daemon_conn *master, const u8 *msg)
 		sign_tx_input(tx, i, subscript, wscript, &inprivkey, &inkey,
 			      &sig);
 
-		tx->input[i].witness = bitcoin_witness_p2wpkh(tx, &sig, &inkey);
+		tx->input[i].witness = btcnano_witness_p2wpkh(tx, &sig, &inkey);
 
 		if (utxos[i]->is_p2sh)
-			scriptSigs[i] = bitcoin_scriptsig_p2sh_p2wpkh(tx, &inkey);
+			scriptSigs[i] = btcnano_scriptsig_p2sh_p2wpkh(tx, &inkey);
 		else
 			scriptSigs[i] = NULL;
 	}
