@@ -1,5 +1,5 @@
 #! /usr/bin/make
-NAME=Bitcoin Savings & Trust Daily Interest II
+NAME=Btcnano Savings & Trust Daily Interest II
 
 # TODO: Decide: c-lightning, lightningd, lightning?
 PKGNAME = c-lightning
@@ -34,7 +34,7 @@ endif
 
 PYTEST := $(shell command -v pytest 2> /dev/null)
 
-# This is where we add new features as bitcoin adds them.
+# This is where we add new features as btcnano adds them.
 FEATURES :=
 
 CCAN_OBJS :=					\
@@ -275,8 +275,8 @@ $(ALL_PROGRAMS) $(ALL_TEST_PROGRAMS):
 # Everything depends on the CCAN headers, and Makefile
 $(CCAN_OBJS) $(CDUMP_OBJS): $(CCAN_HEADERS) Makefile
 
-# Except for CCAN, we treat everything else as dependent on external/ bitcoin/ common/ wire/ and all generated headers, and Makefile
-$(ALL_OBJS): $(BITCOIN_HEADERS) $(COMMON_HEADERS) $(CCAN_HEADERS) $(WIRE_HEADERS) $(ALL_GEN_HEADERS) $(EXTERNAL_HEADERS) Makefile
+# Except for CCAN, we treat everything else as dependent on external/ btcnano/ common/ wire/ and all generated headers, and Makefile
+$(ALL_OBJS): $(BTCNANO_HEADERS) $(COMMON_HEADERS) $(CCAN_HEADERS) $(WIRE_HEADERS) $(ALL_GEN_HEADERS) $(EXTERNAL_HEADERS) Makefile
 
 # We generate headers in two ways, so regen when either changes (or Makefile)
 $(ALL_GEN_HEADERS): ccan/ccan/cdump/tools/cdump-enumstr $(WIRE_GEN) Makefile
