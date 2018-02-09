@@ -1,0 +1,8 @@
+The implementation is still incomplete and under development.
+
+These are standard btcnano manipulation routines which should be
+provided by any normal btcnano library in whatever language you choose.
+
+The ones here are standalone ones taken from btcnano core and some I
+wrote, many taken from btcnano-iterate and pasted in here.
+
