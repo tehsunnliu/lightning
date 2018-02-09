@@ -4,6 +4,8 @@
 #include <string.h>
 
 const struct chainparams networks[] = {
+
+	// Btcnano
 	{.index = 0,
 	.network_name = "btcnano",
 	.bip173_name = "btn",
@@ -13,6 +15,8 @@ const struct chainparams networks[] = {
 	.cli_args = NULL,
 	.dust_limit = 100000,
 	.testnet = false},
+
+	// Btcnano testnet	
 	{.index = 1,
 	.network_name = "testnet",
 	.bip173_name = "btt",
@@ -22,6 +26,8 @@ const struct chainparams networks[] = {
 	.cli_args = "-testnet",
 	.dust_limit = 100000,
 	.testnet = true},	
+
+	/*// Bitcoin
     {.index = 2,
 	.network_name = "bitcoin",
 	.bip173_name = "bc",
@@ -31,6 +37,8 @@ const struct chainparams networks[] = {
 	.cli_args = NULL,
 	.dust_limit = 546,
 	.testnet = false},
+
+	// Bitcoin regtest
 	{.index = 3,
 	.network_name = "regtest",
 	.bip173_name = "bcrt",
@@ -40,6 +48,7 @@ const struct chainparams networks[] = {
 	.cli_args = "-regtest",
 	.dust_limit = 546,
 	.testnet = true},
+
 	{.index = 4,
 	.network_name = "testnet",
 	.bip173_name = "tb",
@@ -49,7 +58,7 @@ const struct chainparams networks[] = {
 	.cli_args = "-testnet",
 	.dust_limit = 546,
 	.testnet = true}
-    /*{.index = 3,
+    {.index = 3,
      .network_name = "litecoin",
      .bip173_name = "ltc",
      .genesis_blockhash = {{{.u.u8 = {0xe2, 0xbf, 0x04, 0x7e, 0x7e, 0x5a, 0x19, 0x1a, 0xa4, 0xef, 0x34, 0xd3, 0x14, 0x97, 0x9d, 0xc9, 0x98, 0x6e, 0x0f, 0x19, 0x25, 0x1e, 0xda, 0xba, 0x59, 0x40, 0xfd, 0x1f, 0xe3, 0x65, 0xa7, 0x12 }}}},
