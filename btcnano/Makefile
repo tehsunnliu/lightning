@@ -1,7 +1,7 @@
 # Included for one dir up.
 
 BTCNANO_SRC :=					\
-	btcnano/base58.c			\
+	#btcnano/base58.c			\
 	btcnano/block.c				\
 	btcnano/chainparams.c		\
 	btcnano/locktime.c			\
@@ -9,7 +9,7 @@ BTCNANO_SRC :=					\
 	btcnano/pullpush.c			\
 	btcnano/script.c			\
 	btcnano/shadouble.c			\
-	btcnano/short_channel_id.c	\
+	#btcnano/short_channel_id.c	\
 	btcnano/signature.c			\
 	btcnano/tx.c				\
 	btcnano/varint.c
@@ -18,7 +18,7 @@ BTCNANO_OBJS := $(BTCNANO_SRC:.c=.o)
 
 BTCNANO_HEADERS := 
 	btcnano/address.h			\
-	btcnano/base58.h			\
+	#btcnano/base58.h			\
 	btcnano/block.h				\
 	btcnano/chainparams.h		\
 	btcnano/locktime.h			\
@@ -28,7 +28,7 @@ BTCNANO_HEADERS :=
 	btcnano/pullpush.h			\
 	btcnano/script.h			\
 	btcnano/shadouble.h			\
-	btcnano/short_channel_id.h	\
+	#btcnano/short_channel_id.h	\
 	btcnano/signature.h			\
 	btcnano/tx.h				\
 	btcnano/varint.h
@@ -48,10 +48,10 @@ check-btcnano-makefile:
 
 check-whitespace: $(BTCNANO_SRC:%=check-whitespace/%) $(BTCNANO_HEADERS:%=check-whitespace/%) check-whitespace/btcnano/Makefile
 
-clean: bitcoin-clean
+clean: btcnano-clean
 
 btcnano-clean:
 	$(RM) $(BTCNANO_OBJS) $(BTCNANO_TEST_PROGRAMS) $(BTCNANO_TEST_OBJS)
 
 # Uncomment the below line for running test
-#include bitcoin/test/Makefile
+#include btcnano/test/Makefile
