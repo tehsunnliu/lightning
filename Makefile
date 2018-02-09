@@ -157,7 +157,7 @@ default: all-programs all-test-programs
 
 # Remove bitcoin in future.
 include external/Makefile
-#include bitcoin/Makefile
+include bitcoin/Makefile
 include btcnano/Makefile
 include common/Makefile
 include wire/Makefile
