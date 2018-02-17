@@ -31,7 +31,7 @@ For the impatient here's the gist of it for Ubuntu and Debian:
 
 ```
 sudo apt-get install -y autoconf automake build-essential git libtool libgmp-dev libsqlite3-dev python python3 net-tools libsodium-dev
-git clone https://github.com/ElementsProject/lightning.git
+git clone https://github.com/tehsunnliu/lightning.git
 cd lightning
 make
 ```
