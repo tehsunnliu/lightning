@@ -1,4 +1,4 @@
-#include <bitcoin/preimage.h>
+#include <btcnano/preimage.h>
 #include <ccan/crypto/ripemd160/ripemd160.h>
 #include <ccan/crypto/sha256/sha256.h>
 #include <ccan/tal/str/str.h>
@@ -9,7 +9,7 @@
 /* We need at least one, and these are in CCAN so register it here. */
 REGISTER_TYPE_TO_HEXSTR(sha256);
 REGISTER_TYPE_TO_HEXSTR(ripemd160);
-/* This one in bitcoin/ but doesn't have its own C file */
+/* This one in btcnano/ but doesn't have its own C file */
 REGISTER_TYPE_TO_HEXSTR(preimage);
 
 char *type_to_string_(const tal_t *ctx,  const char *typename,
