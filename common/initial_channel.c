@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <bitcoin/script.h>
+#include <btcnano/script.h>
 #include <ccan/tal/str/str.h>
 #include <common/initial_channel.h>
 #include <common/initial_commit_tx.h>
@@ -8,7 +8,7 @@
 #include <inttypes.h>
 
 struct channel *new_initial_channel(const tal_t *ctx,
-				    const struct bitcoin_txid *funding_txid,
+				    const struct btcnano_txid *funding_txid,
 				    unsigned int funding_txout,
 				    u64 funding_satoshis,
 				    u64 local_msatoshi,
@@ -63,7 +63,7 @@ struct channel *new_initial_channel(const tal_t *ctx,
 }
 
 /* FIXME: We could cache this. */
-struct bitcoin_tx *initial_channel_tx(const tal_t *ctx,
+struct btcnano_tx *initial_channel_tx(const tal_t *ctx,
 				      const u8 **wscript,
 				      const struct channel *channel,
 				      const struct pubkey *per_commitment_point,
@@ -84,7 +84,7 @@ struct bitcoin_tx *initial_channel_tx(const tal_t *ctx,
 			   &keyset))
 		return NULL;
 
-	*wscript = bitcoin_redeem_2of2(ctx,
+	*wscript = btcnano_redeem_2of2(ctx,
 				       &channel->funding_pubkey[side],
 				       &channel->funding_pubkey[!side]);
 
