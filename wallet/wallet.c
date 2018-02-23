@@ -1,7 +1,7 @@
 #include "invoices.h"
 #include "wallet.h"
 
-#include <bitcoin/script.h>
+#include <btcnano/script.h>
 #include <ccan/structeq/structeq.h>
 #include <ccan/tal/str/str.h>
 #include <inttypes.h>
@@ -79,7 +79,7 @@ static bool wallet_stmt2output(sqlite3_stmt *stmt, struct utxo *utxo)
 }
 
 bool wallet_update_output_status(struct wallet *w,
-				 const struct bitcoin_txid *txid,
+				 const struct btcnano_txid *txid,
 				 const u32 outnum, enum output_status oldstatus,
 				 enum output_status newstatus)
 {
@@ -500,7 +500,7 @@ static bool wallet_stmt2channel(const tal_t *ctx, struct wallet *w, sqlite3_stmt
 
 	if (sqlite3_column_type(stmt, 12) != SQLITE_NULL) {
 		assert(sqlite3_column_bytes(stmt, 12) == 32);
-		chan->peer->funding_txid = tal(chan->peer, struct bitcoin_txid);
+		chan->peer->funding_txid = tal(chan->peer, struct btcnano_txid);
 		memcpy(chan->peer->funding_txid, sqlite3_column_blob(stmt, 12), 32);
 	} else {
 		chan->peer->funding_txid = NULL;
@@ -845,7 +845,7 @@ void wallet_channel_delete(struct wallet *w, u64 wallet_id)
 	db_exec_prepared(w->db, stmt);
 }
 
-int wallet_extract_owned_outputs(struct wallet *w, const struct bitcoin_tx *tx,
+int wallet_extract_owned_outputs(struct wallet *w, const struct btcnano_tx *tx,
 				 u64 *total_satoshi)
 {
 	int num_utxos = 0;
@@ -863,13 +863,13 @@ int wallet_extract_owned_outputs(struct wallet *w, const struct bitcoin_tx *tx,
 		utxo->is_p2sh = is_p2sh;
 		utxo->amount = tx->output[output].amount;
 		utxo->status = output_state_available;
-		bitcoin_txid(tx, &utxo->txid);
+		btcnano_txid(tx, &utxo->txid);
 		utxo->outnum = output;
 		utxo->close_info = NULL;
 		log_debug(w->log, "Owning output %zu %"PRIu64" (%s) txid %s",
 			  output, tx->output[output].amount,
 			  is_p2sh ? "P2SH" : "SEGWIT",
-			  type_to_string(ltmp, struct bitcoin_txid,
+			  type_to_string(ltmp, struct btcnano_txid,
 					 &utxo->txid));
 
 		if (!wallet_add_utxo(w, utxo, is_p2sh ? p2sh_wpkh : our_change)) {

@@ -1,6 +1,6 @@
-#include <bitcoin/address.h>
-#include <bitcoin/base58.h>
-#include <bitcoin/script.h>
+#include <btcnano/address.h>
+#include <btcnano/base58.h>
+#include <btcnano/script.h>
 #include <ccan/tal/str/str.h>
 #include <common/bech32.h>
 #include <common/key_derive.h>
@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <hsmd/gen_hsm_client_wire.h>
 #include <inttypes.h>
-#include <lightningd/bitcoind.h>
+#include <lightningd/btcnanod.h>
 #include <lightningd/chaintopology.h>
 #include <lightningd/hsm_control.h>
 #include <lightningd/jsonrpc.h>
@@ -38,13 +38,13 @@ struct withdrawal {
  * the used outputs as spent, and add the change output to our pool of
  * available outputs.
  */
-static void wallet_withdrawal_broadcast(struct bitcoind *bitcoind,
+static void wallet_withdrawal_broadcast(struct btcnanod *btcnanod,
 					int exitstatus, const char *msg,
 					struct withdrawal *withdraw)
 {
 	struct command *cmd = withdraw->cmd;
 	struct lightningd *ld = withdraw->cmd->ld;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	u64 change_satoshi = 0;
 
 	/* Massage output into shape so it doesn't kill the JSON serialization */
@@ -55,7 +55,7 @@ static void wallet_withdrawal_broadcast(struct bitcoind *bitcoind,
 
 		/* Parse the tx and extract the change output. We
 		 * generated the hex tx, so this should always work */
-		tx = bitcoin_tx_from_hex(withdraw, withdraw->hextx, strlen(withdraw->hextx));
+		tx = btcnano_tx_from_hex(withdraw, withdraw->hextx, strlen(withdraw->hextx));
 		assert(tx != NULL);
 		wallet_extract_owned_outputs(ld->wallet, tx, &change_satoshi);
 
@@ -130,7 +130,7 @@ static bool segwit_addr_net_decode(bool *testnet, int *witness_version,
 static u8 *scriptpubkey_from_address(const tal_t *cxt, bool *testnet,
 				     const char *addr, size_t addrlen)
 {
-	struct bitcoin_address p2pkh_destination;
+	struct btcnano_address p2pkh_destination;
 	struct ripemd160 p2sh_destination;
 	int witness_version;
 	/* segwit_addr_net_decode requires a buffer of size 40, and will
@@ -144,7 +144,7 @@ static u8 *scriptpubkey_from_address(const tal_t *cxt, bool *testnet,
 	char *addrz;
 	bool my_testnet;
 
-	if (bitcoin_from_base58(testnet, &p2pkh_destination,
+	if (btcnano_from_base58(testnet, &p2pkh_destination,
 				addr, addrlen)) {
 		script = scriptpubkey_p2pkh(cxt, &p2pkh_destination);
 	} else if (p2sh_from_base58(testnet, &p2sh_destination,
@@ -197,7 +197,7 @@ static void json_withdraw(struct command *cmd,
 	u32 feerate_per_kw = get_feerate(cmd->ld->topology, FEERATE_NORMAL);
 	u64 fee_estimate;
 	struct utxo *utxos;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	bool withdraw_all = false;
 
 	if (!json_get_params(cmd, buffer, params,
@@ -292,7 +292,7 @@ static void json_withdraw(struct command *cmd,
 
 	msg = hsm_sync_read(cmd, cmd->ld);
 
-	tx = tal(withdraw, struct bitcoin_tx);
+	tx = tal(withdraw, struct btcnano_tx);
 
 	if (!fromwire_hsm_sign_withdrawal_reply(msg, NULL, tx))
 		fatal("HSM gave bad sign_withdrawal_reply %s",
@@ -300,7 +300,7 @@ static void json_withdraw(struct command *cmd,
 
 	/* Now broadcast the transaction */
 	withdraw->hextx = tal_hex(withdraw, linearize_tx(cmd, tx));
-	bitcoind_sendrawtx(cmd->ld->topology->bitcoind, withdraw->hextx,
+	btcnanod_sendrawtx(cmd->ld->topology->btcnanod, withdraw->hextx,
 			   wallet_withdrawal_broadcast, withdraw);
 	command_still_pending(cmd);
 }
@@ -375,7 +375,7 @@ static void json_newaddr(struct command *cmd,
 		}
 	}
 	else {
-		redeemscript = bitcoin_redeem_p2sh_p2wpkh(cmd, &pubkey);
+		redeemscript = btcnano_redeem_p2sh_p2wpkh(cmd, &pubkey);
 		sha256(&h, redeemscript, tal_count(redeemscript));
 		ripemd160(&h160, h.u.u8, sizeof(h));
 		out = p2sh_to_base58(cmd,
@@ -428,8 +428,8 @@ struct txo_rescan {
 	struct json_result *response;
 };
 
-static void process_utxo_result(struct bitcoind *bitcoind,
-				const struct bitcoin_tx_output *txout,
+static void process_utxo_result(struct btcnanod *btcnanod,
+				const struct btcnano_tx_output *txout,
 				void *arg)
 {
 	struct txo_rescan *rescan = arg;
@@ -444,7 +444,7 @@ static void process_utxo_result(struct bitcoind *bitcoind,
 	json_add_num(response, "oldstate", u->status);
 	json_add_num(response, "newstate", newstate);
 	json_object_end(rescan->response);
-	wallet_update_output_status(bitcoind->ld->wallet, &u->txid, u->outnum,
+	wallet_update_output_status(btcnanod->ld->wallet, &u->txid, u->outnum,
 				    u->status, newstate);
 
 	/* Remove the utxo we just resolved */
@@ -457,8 +457,8 @@ static void process_utxo_result(struct bitcoind *bitcoind,
 		json_object_end(rescan->response);
 		command_success(rescan->cmd, rescan->response);
 	} else {
-		bitcoind_gettxout(
-		    bitcoind->ld->topology->bitcoind, &rescan->utxos[0]->txid,
+		btcnanod_gettxout(
+		    btcnanod->ld->topology->btcnanod, &rescan->utxos[0]->txid,
 		    rescan->utxos[0]->outnum, process_utxo_result, rescan);
 	}
 }
@@ -475,7 +475,7 @@ static void json_dev_rescan_outputs(struct command *cmd, const char *buffer,
 	json_array_start(rescan->response, "outputs");
 	rescan->utxos =
 	    wallet_get_utxos(rescan, cmd->ld->wallet, output_state_any);
-	bitcoind_gettxout(cmd->ld->topology->bitcoind, &rescan->utxos[0]->txid,
+	btcnanod_gettxout(cmd->ld->topology->btcnanod, &rescan->utxos[0]->txid,
 			  rescan->utxos[0]->outnum, process_utxo_result,
 			  rescan);
 	command_still_pending(cmd);
@@ -483,6 +483,6 @@ static void json_dev_rescan_outputs(struct command *cmd, const char *buffer,
 
 static const struct json_command dev_rescan_output_command = {
     "dev-rescan-outputs", json_dev_rescan_outputs,
-    "Synchronize the state of our funds with bitcoind"
+    "Synchronize the state of our funds with btcnanod"
 };
 AUTODATA(json_command, &dev_rescan_output_command);

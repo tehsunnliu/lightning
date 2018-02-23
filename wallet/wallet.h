@@ -3,7 +3,7 @@
 
 #include "config.h"
 #include "db.h"
-#include <bitcoin/tx.h>
+#include <btcnano/tx.h>
 #include <ccan/crypto/shachain/shachain.h>
 #include <ccan/list/list.h>
 #include <ccan/tal/tal.h>
@@ -133,7 +133,7 @@ bool wallet_add_utxo(struct wallet *w, struct utxo *utxo,
  * `output_state_any` as @oldstatus.
  */
 bool wallet_update_output_status(struct wallet *w,
-				 const struct bitcoin_txid *txid,
+				 const struct btcnano_txid *txid,
 				 const u32 outnum, enum output_status oldstatus,
 				 enum output_status newstatus);
 
@@ -276,7 +276,7 @@ u32 wallet_channels_first_blocknum(struct wallet *w);
 /**
  * wallet_extract_owned_outputs - given a tx, extract all of our outputs
  */
-int wallet_extract_owned_outputs(struct wallet *w, const struct bitcoin_tx *tx,
+int wallet_extract_owned_outputs(struct wallet *w, const struct btcnano_tx *tx,
 				 u64 *total_satoshi);
 
 /**
