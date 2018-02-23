@@ -1,5 +1,5 @@
-#include <bitcoin/base58.h>
-#include <bitcoin/script.h>
+#include <btcnano/base58.h>
+#include <btcnano/script.h>
 #include <ccan/structeq/structeq.h>
 #include <common/utils.h>
 #include <lightningd/build_utxos.h>
