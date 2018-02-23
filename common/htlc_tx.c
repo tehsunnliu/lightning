@@ -1,11 +1,11 @@
-#include <bitcoin/preimage.h>
-#include <bitcoin/script.h>
-#include <bitcoin/tx.h>
+#include <btcnano/preimage.h>
+#include <btcnano/script.h>
+#include <btcnano/tx.h>
 #include <common/htlc_tx.h>
 #include <common/keyset.h>
 
-static struct bitcoin_tx *htlc_tx(const tal_t *ctx,
-				  const struct bitcoin_txid *commit_txid,
+static struct btcnano_tx *htlc_tx(const tal_t *ctx,
+				  const struct btcnano_txid *commit_txid,
 				  unsigned int commit_output_number,
 				  u64 msatoshi,
 				  u16 to_self_delay,
@@ -14,7 +14,7 @@ static struct bitcoin_tx *htlc_tx(const tal_t *ctx,
 				  u64 htlc_fee_satoshi,
 				  u32 locktime)
 {
-	struct bitcoin_tx *tx = bitcoin_tx(ctx, 1, 1);
+	struct btcnano_tx *tx = btcnano_tx(ctx, 1, 1);
 	u8 *wscript;
 	u64 amount;
 
@@ -63,7 +63,7 @@ static struct bitcoin_tx *htlc_tx(const tal_t *ctx,
 	 *       below.
 	 */
 	tx->output[0].amount = amount - htlc_fee_satoshi;
-	wscript = bitcoin_wscript_htlc_tx(tx, to_self_delay,
+	wscript = btcnano_wscript_htlc_tx(tx, to_self_delay,
 					  revocation_pubkey, local_delayedkey);
 	tx->output[0].script = scriptpubkey_p2wsh(tx, wscript);
 	tal_free(wscript);
@@ -71,8 +71,8 @@ static struct bitcoin_tx *htlc_tx(const tal_t *ctx,
 	return tx;
 }
 
-struct bitcoin_tx *htlc_success_tx(const tal_t *ctx,
-				   const struct bitcoin_txid *commit_txid,
+struct btcnano_tx *htlc_success_tx(const tal_t *ctx,
+				   const struct btcnano_txid *commit_txid,
 				   unsigned int commit_output_number,
 				   u64 htlc_msatoshi,
 				   u16 to_self_delay,
@@ -90,7 +90,7 @@ struct bitcoin_tx *htlc_success_tx(const tal_t *ctx,
 }
 
 /* Fill in the witness for HTLC-success tx produced above. */
-void htlc_success_tx_add_witness(struct bitcoin_tx *htlc_success,
+void htlc_success_tx_add_witness(struct btcnano_tx *htlc_success,
 				 const struct abs_locktime *htlc_abstimeout,
 				 const struct pubkey *localhtlckey,
 				 const struct pubkey *remotehtlckey,
@@ -103,21 +103,21 @@ void htlc_success_tx_add_witness(struct bitcoin_tx *htlc_success,
 	u8 *wscript;
 
 	sha256(&hash, payment_preimage, sizeof(*payment_preimage));
-	wscript = bitcoin_wscript_htlc_receive(htlc_success,
+	wscript = btcnano_wscript_htlc_receive(htlc_success,
 					       htlc_abstimeout,
 					       localhtlckey, remotehtlckey,
 					       &hash, revocationkey);
 
 	htlc_success->input[0].witness
-		= bitcoin_witness_htlc_success_tx(htlc_success->input,
+		= btcnano_witness_htlc_success_tx(htlc_success->input,
 						  localhtlcsig, remotehtlcsig,
 						  payment_preimage,
 						  wscript);
 	tal_free(wscript);
 }
 
-struct bitcoin_tx *htlc_timeout_tx(const tal_t *ctx,
-				   const struct bitcoin_txid *commit_txid,
+struct btcnano_tx *htlc_timeout_tx(const tal_t *ctx,
+				   const struct btcnano_txid *commit_txid,
 				   unsigned int commit_output_number,
 				   u64 htlc_msatoshi,
 				   u32 cltv_expiry,
@@ -137,7 +137,7 @@ struct bitcoin_tx *htlc_timeout_tx(const tal_t *ctx,
 }
 
 /* Fill in the witness for HTLC-timeout tx produced above. */
-void htlc_timeout_tx_add_witness(struct bitcoin_tx *htlc_timeout,
+void htlc_timeout_tx_add_witness(struct btcnano_tx *htlc_timeout,
 				 const struct pubkey *localhtlckey,
 				 const struct pubkey *remotehtlckey,
 				 const struct sha256 *payment_hash,
@@ -145,12 +145,12 @@ void htlc_timeout_tx_add_witness(struct bitcoin_tx *htlc_timeout,
 				 const secp256k1_ecdsa_signature *localhtlcsig,
 				 const secp256k1_ecdsa_signature *remotehtlcsig)
 {
-	u8 *wscript = bitcoin_wscript_htlc_offer(htlc_timeout,
+	u8 *wscript = btcnano_wscript_htlc_offer(htlc_timeout,
 						 localhtlckey, remotehtlckey,
 						 payment_hash, revocationkey);
 
 	htlc_timeout->input[0].witness
-		= bitcoin_witness_htlc_timeout_tx(htlc_timeout->input,
+		= btcnano_witness_htlc_timeout_tx(htlc_timeout->input,
 						  localhtlcsig, remotehtlcsig,
 						  wscript);
 	tal_free(wscript);
@@ -160,7 +160,7 @@ u8 *htlc_offered_wscript(const tal_t *ctx,
 			 const struct ripemd160 *ripemd,
 			 const struct keyset *keyset)
 {
-	return bitcoin_wscript_htlc_offer_ripemd160(ctx,
+	return btcnano_wscript_htlc_offer_ripemd160(ctx,
 						    &keyset->self_htlc_key,
 						    &keyset->other_htlc_key,
 						    ripemd,
@@ -172,7 +172,7 @@ u8 *htlc_received_wscript(const tal_t *ctx,
 			  const struct abs_locktime *expiry,
 			  const struct keyset *keyset)
 {
-	return bitcoin_wscript_htlc_receive_ripemd(ctx,
+	return btcnano_wscript_htlc_receive_ripemd(ctx,
 						   expiry,
 						   &keyset->self_htlc_key,
 						   &keyset->other_htlc_key,
