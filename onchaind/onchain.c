@@ -1,4 +1,4 @@
-#include <bitcoin/script.h>
+#include <btcnano/script.h>
 #include <ccan/crypto/shachain/shachain.h>
 #include <ccan/mem/mem.h>
 #include <ccan/structeq/structeq.h>
@@ -59,7 +59,7 @@ static u8 **missing_htlc_msgs;
 /* If we broadcast a tx, or need a delay to resolve the output. */
 struct proposed_resolution {
 	/* This can be NULL if our proposal is to simply ignore it after depth */
-	const struct bitcoin_tx *tx;
+	const struct btcnano_tx *tx;
 	/* Non-zero if this is CSV-delayed. */
 	u32 depth_required;
 	enum tx_type tx_type;
@@ -67,14 +67,14 @@ struct proposed_resolution {
 
 /* How it actually got resolved. */
 struct resolution {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	unsigned int depth;
 	enum tx_type tx_type;
 };
 
 struct tracked_output {
 	enum tx_type tx_type;
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	u32 tx_blockheight;
 	u32 outnum;
 	u64 satoshi;
@@ -101,7 +101,7 @@ struct {
 } feerate_range;
 
 static void init_feerate_range(u64 funding_satoshi,
-			       const struct bitcoin_tx *commit_tx)
+			       const struct btcnano_tx *commit_tx)
 {
 	size_t i, max_untrimmed_htlcs;
 	u64 fee = funding_satoshi;
@@ -153,7 +153,7 @@ static void narrow_feerate_range(u64 fee, u32 multiplier)
 
 /* We vary feerate until signature they offered matches: we're more
  * likely to be near max. */
-static bool grind_feerate(struct bitcoin_tx *commit_tx,
+static bool grind_feerate(struct btcnano_tx *commit_tx,
 			  const secp256k1_ecdsa_signature *remotesig,
 			  const u8 *wscript,
 			  u64 multiplier)
@@ -211,7 +211,7 @@ static const char *output_type_name(enum output_type output_type)
  * 4. the their-revoked-commitment, to-local (`<revocation_sig> 1`)
  * 5. the their-revoked-commitment, htlc (`<revocation_sig> <revocationkey>`)
  */
-static struct bitcoin_tx *tx_to_us(const tal_t *ctx,
+static struct btcnano_tx *tx_to_us(const tal_t *ctx,
 				   struct tracked_output *out,
 				   u32 to_self_delay,
 				   u32 locktime,
@@ -220,11 +220,11 @@ static struct bitcoin_tx *tx_to_us(const tal_t *ctx,
 				   const struct privkey *privkey,
 				   const struct pubkey *pubkey)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	u64 fee;
 	secp256k1_ecdsa_signature sig;
 
-	tx = bitcoin_tx(ctx, 1, 1);
+	tx = btcnano_tx(ctx, 1, 1);
 	tx->lock_time = locktime;
 	tx->input[0].sequence_number = to_self_delay;
 	tx->input[0].txid = out->txid;
@@ -247,7 +247,7 @@ static struct bitcoin_tx *tx_to_us(const tal_t *ctx,
 		tx->output[0].amount -= fee;
 
 	sign_tx_input(tx, 0, NULL, wscript, privkey, pubkey, &sig);
-	tx->input[0].witness = bitcoin_witness_sig_and_element(tx->input,
+	tx->input[0].witness = btcnano_witness_sig_and_element(tx->input,
 							       &sig,
 							       elem, elemsize,
 							       wscript);
@@ -256,7 +256,7 @@ static struct bitcoin_tx *tx_to_us(const tal_t *ctx,
 
 static struct tracked_output *
 	new_tracked_output(struct tracked_output ***outs,
-			   const struct bitcoin_txid *txid,
+			   const struct btcnano_txid *txid,
 			   u32 tx_blockheight,
 			   enum tx_type tx_type,
 			   u32 outnum,
@@ -271,7 +271,7 @@ static struct tracked_output *
 
 	status_trace("Tracking output %u of %s: %s/%s",
 		     outnum,
-		     type_to_string(trc, struct bitcoin_txid, txid),
+		     type_to_string(trc, struct btcnano_txid, txid),
 		     tx_type_name(tx_type),
 		     output_type_name(output_type));
 
@@ -297,7 +297,7 @@ static void ignore_output(struct tracked_output *out)
 {
 	status_trace("Ignoring output %u of %s: %s/%s",
 		     out->outnum,
-		     type_to_string(trc, struct bitcoin_txid, &out->txid),
+		     type_to_string(trc, struct btcnano_txid, &out->txid),
 		     tx_type_name(out->tx_type),
 		     output_type_name(out->output_type));
 
@@ -317,7 +317,7 @@ static void proposal_meets_depth(struct tracked_output *out)
 
 	status_trace("Broadcasting %s (%s) to resolve %s/%s",
 		     tx_type_name(out->proposal->tx_type),
-		     type_to_string(trc, struct bitcoin_tx, out->proposal->tx),
+		     type_to_string(trc, struct btcnano_tx, out->proposal->tx),
 		     tx_type_name(out->tx_type),
 		     output_type_name(out->output_type));
 
@@ -328,7 +328,7 @@ static void proposal_meets_depth(struct tracked_output *out)
 }
 
 static void propose_resolution(struct tracked_output *out,
-			       const struct bitcoin_tx *tx,
+			       const struct btcnano_tx *tx,
 			       unsigned int depth_required,
 			       enum tx_type tx_type)
 {
@@ -336,7 +336,7 @@ static void propose_resolution(struct tracked_output *out,
 		     tx_type_name(out->tx_type),
 		     output_type_name(out->output_type),
 		     tx_type_name(tx_type),
-		     tx ? type_to_string(trc, struct bitcoin_tx, tx):"IGNORING",
+		     tx ? type_to_string(trc, struct btcnano_tx, tx):"IGNORING",
 		     depth_required);
 
 	out->proposal = tal(out, struct proposed_resolution);
@@ -349,7 +349,7 @@ static void propose_resolution(struct tracked_output *out,
 }
 
 static void propose_resolution_at_block(struct tracked_output *out,
-					const struct bitcoin_tx *tx,
+					const struct btcnano_tx *tx,
 					unsigned int block_required,
 					enum tx_type tx_type)
 {
@@ -365,14 +365,14 @@ static void propose_resolution_at_block(struct tracked_output *out,
 
 /* This simple case: true if this was resolved by our proposal. */
 static bool resolved_by_proposal(struct tracked_output *out,
-				 const struct bitcoin_txid *txid)
+				 const struct btcnano_txid *txid)
 {
 	/* If there's no TX associated, it's not us. */
 	if (!out->proposal->tx)
 		return false;
 
 	out->resolved = tal(out, struct resolution);
-	bitcoin_txid(out->proposal->tx, &out->resolved->txid);
+	btcnano_txid(out->proposal->tx, &out->resolved->txid);
 
 	/* Not the same as what we proposed? */
 	if (!structeq(&out->resolved->txid, txid)) {
@@ -384,7 +384,7 @@ static bool resolved_by_proposal(struct tracked_output *out,
 		     tx_type_name(out->tx_type),
 		     output_type_name(out->output_type),
 		     tx_type_name(out->proposal->tx_type),
-		     type_to_string(trc, struct bitcoin_tx, out->proposal->tx));
+		     type_to_string(trc, struct btcnano_tx, out->proposal->tx));
 
 	out->resolved->depth = 0;
 	out->resolved->tx_type = out->proposal->tx_type;
@@ -393,7 +393,7 @@ static bool resolved_by_proposal(struct tracked_output *out,
 
 /* Otherwise, we figure out what happened and then call this. */
 static void resolved_by_other(struct tracked_output *out,
-			      const struct bitcoin_txid *txid,
+			      const struct btcnano_txid *txid,
 			      enum tx_type tx_type)
 {
 	out->resolved = tal(out, struct resolution);
@@ -405,14 +405,14 @@ static void resolved_by_other(struct tracked_output *out,
 		     tx_type_name(out->tx_type),
 		     output_type_name(out->output_type),
 		     tx_type_name(tx_type),
-		     type_to_string(trc, struct bitcoin_txid, txid));
+		     type_to_string(trc, struct btcnano_txid, txid));
 }
 
 static void unknown_spend(struct tracked_output *out,
-			  const struct bitcoin_tx *tx)
+			  const struct btcnano_tx *tx)
 {
 	out->resolved = tal(out, struct resolution);
-	bitcoin_txid(tx, &out->resolved->txid);
+	btcnano_txid(tx, &out->resolved->txid);
 	out->resolved->depth = 0;
 	out->resolved->tx_type = UNKNOWN_TXTYPE;
 
@@ -420,10 +420,10 @@ static void unknown_spend(struct tracked_output *out,
 	status_trace("Unknown spend of %s/%s by %s",
 		     tx_type_name(out->tx_type),
 		     output_type_name(out->output_type),
-		     type_to_string(trc, struct bitcoin_tx, tx));
+		     type_to_string(trc, struct btcnano_tx, tx));
 }
 
-static u64 unmask_commit_number(const struct bitcoin_tx *tx,
+static u64 unmask_commit_number(const struct btcnano_tx *tx,
 				enum side funder,
 				const struct pubkey *local_payment_basepoint,
 				const struct pubkey *remote_payment_basepoint)
@@ -455,7 +455,7 @@ static u64 unmask_commit_number(const struct bitcoin_tx *tx,
 		^ obscurer;
 }
 
-static bool is_mutual_close(const struct bitcoin_tx *tx,
+static bool is_mutual_close(const struct btcnano_tx *tx,
 			    const u8 *local_scriptpubkey,
 			    const u8 *remote_scriptpubkey)
 {
@@ -478,8 +478,8 @@ static bool is_mutual_close(const struct bitcoin_tx *tx,
 }
 
 /* We only ever send out one, so matching it is easy. */
-static bool is_local_commitment(const struct bitcoin_txid *txid,
-				const struct bitcoin_txid *our_broadcast_txid)
+static bool is_local_commitment(const struct btcnano_txid *txid,
+				const struct btcnano_txid *our_broadcast_txid)
 {
 	return structeq(txid, our_broadcast_txid);
 }
@@ -501,19 +501,19 @@ static bool all_irrevocably_resolved(struct tracked_output **outs)
 	return true;
 }
 
-static void unwatch_tx(const struct bitcoin_tx *tx)
+static void unwatch_tx(const struct btcnano_tx *tx)
 {
 	u8 *msg;
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 
-	bitcoin_txid(tx, &txid);
+	btcnano_txid(tx, &txid);
 
 	msg = towire_onchain_unwatch_tx(tx, &txid);
 	wire_sync_write(REQ_FD, take(msg));
 }
 
 static void handle_htlc_onchain_fulfill(struct tracked_output *out,
-					const struct bitcoin_tx *tx)
+					const struct btcnano_tx *tx)
 {
 	const u8 *witness_preimage;
 	struct preimage preimage;
@@ -589,13 +589,13 @@ static void handle_htlc_onchain_fulfill(struct tracked_output *out,
 
 static void resolve_htlc_tx(struct tracked_output ***outs,
 			    size_t out_index,
-			    const struct bitcoin_tx *htlc_tx,
-			    const struct bitcoin_txid *htlc_txid,
+			    const struct btcnano_tx *htlc_tx,
+			    const struct btcnano_txid *htlc_txid,
 			    u32 tx_blockheight)
 {
 	struct tracked_output *out;
-	struct bitcoin_tx *tx;
-	u8 *wscript = bitcoin_wscript_htlc_tx(htlc_tx, to_self_delay[LOCAL],
+	struct btcnano_tx *tx;
+	u8 *wscript = btcnano_wscript_htlc_tx(htlc_tx, to_self_delay[LOCAL],
 					      &keyset->self_revocation_key,
 					      &keyset->self_delayed_payment_key);
 
@@ -648,7 +648,7 @@ static void resolve_htlc_tx(struct tracked_output ***outs,
  */
 static void steal_htlc_tx(struct tracked_output *out)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 
 	/* BOLT #3:
 	 *
@@ -665,13 +665,13 @@ static void steal_htlc_tx(struct tracked_output *out)
 
 /* An output has been spent: see if it resolves something we care about. */
 static void output_spent(struct tracked_output ***outs,
-			 const struct bitcoin_tx *tx,
+			 const struct btcnano_tx *tx,
 			 u32 input_num,
 			 u32 tx_blockheight)
 {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 
-	bitcoin_txid(tx, &txid);
+	btcnano_txid(tx, &txid);
 
 	for (size_t i = 0; i < tal_count(*outs); i++) {
 		struct tracked_output *out = (*outs)[i];
@@ -752,7 +752,7 @@ static void output_spent(struct tracked_output ***outs,
 
 	/* Not interesting to us, so unwatch the tx and all its outputs */
 	status_trace("Notified about tx %s output %u spend, but we don't care",
-		     type_to_string(trc, struct bitcoin_txid,
+		     type_to_string(trc, struct btcnano_txid,
 				    &tx->input[input_num].txid),
 		     tx->input[input_num].index);
 	unwatch_tx(tx);
@@ -793,7 +793,7 @@ static void update_resolution_depth(struct tracked_output *out, u32 depth)
 }
 
 static void tx_new_depth(struct tracked_output **outs,
-			 const struct bitcoin_txid *txid, u32 depth)
+			 const struct btcnano_txid *txid, u32 depth)
 {
 	size_t i;
 
@@ -848,7 +848,7 @@ static void handle_preimage(struct tracked_output **outs,
 	ripemd160(&ripemd, &sha, sizeof(sha));
 
 	for (i = 0; i < tal_count(outs); i++) {
-		struct bitcoin_tx *tx;
+		struct btcnano_tx *tx;
 		secp256k1_ecdsa_signature sig;
 
 		if (outs[i]->output_type != THEIR_HTLC)
@@ -907,7 +907,7 @@ static void handle_preimage(struct tracked_output **outs,
 				      &keyset->self_htlc_key,
 				      &sig);
 			tx->input[0].witness
-				= bitcoin_witness_htlc_success_tx(tx->input,
+				= btcnano_witness_htlc_success_tx(tx->input,
 								  &sig,
 								  outs[i]->remote_htlc_sig,
 								  preimage,
@@ -942,8 +942,8 @@ static void wait_for_resolved(struct tracked_output **outs)
 {
 	while (!all_irrevocably_resolved(outs)) {
 		u8 *msg = wire_sync_read(outs, REQ_FD);
-		struct bitcoin_txid txid;
-		struct bitcoin_tx *tx = tal(msg, struct bitcoin_tx);
+		struct btcnano_txid txid;
+		struct btcnano_tx *tx = tal(msg, struct btcnano_tx);
 		u32 input_num, depth, tx_blockheight;
 		struct preimage preimage;
 
@@ -971,8 +971,8 @@ static void set_state(enum peer_state state)
 	wire_sync_write(REQ_FD, take(towire_onchain_init_reply(NULL, state)));
 }
 
-static void handle_mutual_close(const struct bitcoin_tx *tx,
-				const struct bitcoin_txid *txid,
+static void handle_mutual_close(const struct btcnano_tx *tx,
+				const struct btcnano_txid *txid,
 				struct tracked_output **outs)
 {
 	set_state(ONCHAIND_MUTUAL);
@@ -1018,7 +1018,7 @@ static u8 **derive_htlc_scripts(const struct htlc_stub *htlcs, enum side side)
 
 static void resolve_our_htlc_ourcommit(struct tracked_output *out)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	secp256k1_ecdsa_signature localsig;
 
 	/* BOLT #5:
@@ -1057,7 +1057,7 @@ static void resolve_our_htlc_ourcommit(struct tracked_output *out)
 		      &keyset->self_htlc_key, &localsig);
 
 	tx->input[0].witness
-		= bitcoin_witness_htlc_timeout_tx(tx->input,
+		= btcnano_witness_htlc_timeout_tx(tx->input,
 						  &localsig,
 						  out->remote_htlc_sig,
 						  out->wscript);
@@ -1068,7 +1068,7 @@ static void resolve_our_htlc_ourcommit(struct tracked_output *out)
 
 static void resolve_our_htlc_theircommit(struct tracked_output *out)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 
 	/* BOLT #5:
 	 *
@@ -1108,7 +1108,7 @@ static void resolve_their_htlc(struct tracked_output *out)
 				    THEIR_HTLC_TIMEOUT_TO_THEM);
 }
 
-static int match_htlc_output(const struct bitcoin_tx *tx,
+static int match_htlc_output(const struct btcnano_tx *tx,
 			     unsigned int outnum,
 			     u8 **htlc_scripts)
 {
@@ -1159,9 +1159,9 @@ static void note_missing_htlcs(u8 **htlc_scripts,
 	}
 }
 
-static void handle_our_unilateral(const struct bitcoin_tx *tx,
+static void handle_our_unilateral(const struct btcnano_tx *tx,
 				  u32 tx_blockheight,
-				  const struct bitcoin_txid *txid,
+				  const struct btcnano_txid *txid,
 				  const struct secrets *secrets,
 				  const struct sha256 *shaseed,
 				  const struct pubkey *remote_revocation_basepoint,
@@ -1301,7 +1301,7 @@ static void handle_our_unilateral(const struct bitcoin_tx *tx,
 
 		if (script[LOCAL]
 		    && scripteq(tx->output[i].script, script[LOCAL])) {
-			struct bitcoin_tx *to_us;
+			struct btcnano_tx *to_us;
 			/* BOLT #5:
 			 *
 			 * 1. _A's main output_: A node SHOULD spend this
@@ -1409,7 +1409,7 @@ static void steal_to_them_output(struct tracked_output *out)
 {
 	const tal_t *tmpctx = tal_tmpctx(NULL);
 	u8 *wscript;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 
 	/* BOLT #3:
 	 *
@@ -1418,7 +1418,7 @@ static void steal_to_them_output(struct tracked_output *out)
 	 *
 	 *    <revocation_sig> 1
 	 */
-	wscript = bitcoin_wscript_to_local(tmpctx, to_self_delay[REMOTE],
+	wscript = btcnano_wscript_to_local(tmpctx, to_self_delay[REMOTE],
 					   &keyset->self_revocation_key,
 					   &keyset->self_delayed_payment_key);
 
@@ -1434,7 +1434,7 @@ static void steal_to_them_output(struct tracked_output *out)
 
 static void steal_htlc(struct tracked_output *out)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	u8 der[PUBKEY_DER_LEN];
 
 	/* BOLT #3:
@@ -1459,8 +1459,8 @@ static void steal_htlc(struct tracked_output *out)
  * If a node tries to broadcast old state, we can use the revocation key to
  * claim all the funds.
  */
-static void handle_their_cheat(const struct bitcoin_tx *tx,
-			       const struct bitcoin_txid *txid,
+static void handle_their_cheat(const struct btcnano_tx *tx,
+			       const struct btcnano_txid *txid,
 			       u32 tx_blockheight,
 			       const struct sha256 *revocation_preimage,
 			       const struct secrets *secrets,
@@ -1722,9 +1722,9 @@ static void handle_their_cheat(const struct bitcoin_tx *tx,
 	tal_free(tmpctx);
 }
 
-static void handle_their_unilateral(const struct bitcoin_tx *tx,
+static void handle_their_unilateral(const struct btcnano_tx *tx,
 				    u32 tx_blockheight,
-				    const struct bitcoin_txid *txid,
+				    const struct btcnano_txid *txid,
 				    const struct secrets *secrets,
 				    const struct sha256 *shaseed,
 				    const struct pubkey *remote_per_commitment_point,
@@ -1963,11 +1963,11 @@ int main(int argc, char *argv[])
 	enum side funder;
 	struct basepoints basepoints;
 	struct shachain shachain;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	struct secrets secrets;
 	struct sha256 shaseed;
 	struct tracked_output **outs;
-	struct bitcoin_txid our_broadcast_txid, txid;
+	struct btcnano_txid our_broadcast_txid, txid;
 	secp256k1_ecdsa_signature *remote_htlc_sigs;
 	u64 funding_amount_satoshi, num_htlcs;
 	u8 *scriptpubkey[NUM_SIDES];
@@ -1982,7 +1982,7 @@ int main(int argc, char *argv[])
 	missing_htlc_msgs = tal_arr(ctx, u8 *, 0);
 
 	msg = wire_sync_read(ctx, REQ_FD);
-	tx = tal(ctx, struct bitcoin_tx);
+	tx = tal(ctx, struct btcnano_tx);
 	if (!fromwire_onchain_init(ctx, msg, NULL,
 				   &seed, &shachain,
 				   &funding_amount_satoshi,
@@ -2010,7 +2010,7 @@ int main(int argc, char *argv[])
 	}
 
 	derive_basepoints(&seed, NULL, &basepoints, &secrets, &shaseed);
-	bitcoin_txid(tx, &txid);
+	btcnano_txid(tx, &txid);
 
 	/* FIXME: Filter as we go, don't load them all into mem! */
 	htlcs = tal_arr(ctx, struct htlc_stub, num_htlcs);
@@ -2157,7 +2157,7 @@ int main(int argc, char *argv[])
 				      "Unknown commitment index %"PRIu64
 				      " for tx %s",
 				      commit_num,
-				      type_to_string(ctx, struct bitcoin_tx,
+				      type_to_string(ctx, struct btcnano_tx,
 						     tx));
 	}
 
