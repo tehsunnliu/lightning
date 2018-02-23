@@ -1,6 +1,6 @@
 #include "withdraw_tx.h"
-#include <bitcoin/pubkey.h>
-#include <bitcoin/script.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/script.h>
 #include <ccan/ptrint/ptrint.h>
 #include <common/key_derive.h>
 #include <common/permute_tx.h>
@@ -8,7 +8,7 @@
 #include <string.h>
 #include <wally_bip32.h>
 
-struct bitcoin_tx *withdraw_tx(const tal_t *ctx,
+struct btcnano_tx *withdraw_tx(const tal_t *ctx,
 			       const struct utxo **utxos,
 			       u8 *destination,
 			       const u64 withdraw_amount,
@@ -16,8 +16,8 @@ struct bitcoin_tx *withdraw_tx(const tal_t *ctx,
 			       const u64 changesat,
 			       const struct ext_key *bip32_base)
 {
-	struct bitcoin_tx *tx =
-	    bitcoin_tx(ctx, tal_count(utxos), changesat ? 2 : 1);
+	struct btcnano_tx *tx =
+	    btcnano_tx(ctx, tal_count(utxos), changesat ? 2 : 1);
 	for (size_t i = 0; i < tal_count(utxos); i++) {
 		tx->input[i].txid = utxos[i]->txid;
 		tx->input[i].index = utxos[i]->outnum;
@@ -26,7 +26,7 @@ struct bitcoin_tx *withdraw_tx(const tal_t *ctx,
 			struct pubkey key;
 			bip32_pubkey(bip32_base, &key, utxos[i]->keyindex);
 			tx->input[i].script =
-				bitcoin_scriptsig_p2sh_p2wpkh(tx, &key);
+				btcnano_scriptsig_p2sh_p2wpkh(tx, &key);
 		}
 	}
 	tx->output[0].amount = withdraw_amount;

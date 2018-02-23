@@ -4,11 +4,11 @@
 #include <ccan/short_types/short_types.h>
 #include <ccan/tal/tal.h>
 
-struct bitcoin_tx;
+struct btcnano_tx;
 struct ext_key;
 struct privkey;
 struct pubkey;
-struct bitcoin_address;
+struct btcnano_address;
 struct utxo;
 
 /**
@@ -22,7 +22,7 @@ struct utxo;
  * @changesat: (in) amount to send as change.
  * @bip32_base: (in) bip32 base for key derivation, or NULL.
  */
-struct bitcoin_tx *withdraw_tx(const tal_t *ctx,
+struct btcnano_tx *withdraw_tx(const tal_t *ctx,
 			       const struct utxo **utxos,
 			       u8 *destination,
 			       const u64 withdraw_amount,
