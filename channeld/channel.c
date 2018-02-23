@@ -10,8 +10,8 @@
  *    reading and writing synchronously we could deadlock if we hit buffer
  *    limits, unlikely as that is.
  */
-#include <bitcoin/privkey.h>
-#include <bitcoin/script.h>
+#include <btcnano/privkey.h>
+#include <btcnano/script.h>
 #include <ccan/cast/cast.h>
 #include <ccan/container_of/container_of.h>
 #include <ccan/crypto/hkdf_sha256/hkdf_sha256.h>
@@ -101,7 +101,7 @@ struct peer {
 	 */
 	u64 htlc_id;
 
-	struct bitcoin_blkid chain_hash;
+	struct btcnano_blkid chain_hash;
 	struct channel_id channel_id;
 	struct channel *channel;
 
@@ -131,7 +131,7 @@ struct peer {
 	struct pubkey node_ids[NUM_SIDES];
 	struct short_channel_id short_channel_ids[NUM_SIDES];
 	secp256k1_ecdsa_signature announcement_node_sigs[NUM_SIDES];
-	secp256k1_ecdsa_signature announcement_bitcoin_sigs[NUM_SIDES];
+	secp256k1_ecdsa_signature announcement_btcnano_sigs[NUM_SIDES];
 	bool have_sigs[NUM_SIDES];
 
 	/* Which direction of the channel do we control? */
@@ -356,14 +356,14 @@ static void send_announcement_signatures(struct peer *peer)
 	/* TODO(cdecker) Move this to the HSM once we store the
 	 * funding_privkey there */
 	sign_hash(&peer->our_secrets.funding_privkey, &hash,
-		  &peer->announcement_bitcoin_sigs[LOCAL]);
+		  &peer->announcement_btcnano_sigs[LOCAL]);
 
 	peer->have_sigs[LOCAL] = true;
 
 	msg = towire_announcement_signatures(
 	    tmpctx, &peer->channel_id, &peer->short_channel_ids[LOCAL],
 	    &peer->announcement_node_sigs[LOCAL],
-	    &peer->announcement_bitcoin_sigs[LOCAL]);
+	    &peer->announcement_btcnano_sigs[LOCAL]);
 	enqueue_peer_msg(peer, take(msg));
 	tal_free(tmpctx);
 }
@@ -427,8 +427,8 @@ static u8 *create_channel_announcement(const tal_t *ctx, struct peer *peer)
 	cannounce = towire_channel_announcement(
 	    ctx, &peer->announcement_node_sigs[first],
 	    &peer->announcement_node_sigs[second],
-	    &peer->announcement_bitcoin_sigs[first],
-	    &peer->announcement_bitcoin_sigs[second],
+	    &peer->announcement_btcnano_sigs[first],
+	    &peer->announcement_btcnano_sigs[second],
 	    features,
 	    &peer->chain_hash,
 	    &peer->short_channel_ids[LOCAL], &peer->node_ids[first],
@@ -519,7 +519,7 @@ static void handle_peer_announcement_signatures(struct peer *peer, const u8 *msg
 					      &chanid,
 					      &peer->short_channel_ids[REMOTE],
 					      &peer->announcement_node_sigs[REMOTE],
-					      &peer->announcement_bitcoin_sigs[REMOTE]))
+					      &peer->announcement_btcnano_sigs[REMOTE]))
 		peer_failed(PEER_FD, &peer->cs, &peer->channel_id,
 			    "Bad announcement_signatures %s",
 			    tal_hex(msg, msg));
@@ -620,7 +620,7 @@ static void handle_peer_feechange(struct peer *peer, const u8 *msg)
 	/* BOLT #2:
 	 *
 	 * A receiving node MUST fail the channel if the sender is not
-	 * responsible for paying the bitcoin fee.
+	 * responsible for paying the btcnano fee.
 	 */
 	if (peer->channel->funder != REMOTE)
 		peer_failed(PEER_FD,
@@ -791,7 +791,7 @@ static struct commit_sigs *calc_commitsigs(const tal_t *ctx,
 {
 	const tal_t *tmpctx = tal_tmpctx(ctx);
 	size_t i;
-	struct bitcoin_tx **txs;
+	struct btcnano_tx **txs;
 	const u8 **wscripts;
 	const struct htlc **htlc_map;
 	struct pubkey local_htlckey;
@@ -833,7 +833,7 @@ static struct commit_sigs *calc_commitsigs(const tal_t *ctx,
 		     commit_index,
 		     type_to_string(trc, secp256k1_ecdsa_signature,
 				    &commit_sigs->commit_sig),
-		     type_to_string(trc, struct bitcoin_tx, txs[0]),
+		     type_to_string(trc, struct btcnano_tx, txs[0]),
 		     tal_hex(trc, wscripts[0]),
 		     type_to_string(trc, struct pubkey,
 				    &peer->channel->funding_pubkey[LOCAL]));
@@ -857,7 +857,7 @@ static struct commit_sigs *calc_commitsigs(const tal_t *ctx,
 		status_trace("Creating HTLC signature %s for tx %s wscript %s key %s",
 			     type_to_string(trc, secp256k1_ecdsa_signature,
 					    &commit_sigs->htlc_sigs[i]),
-			     type_to_string(trc, struct bitcoin_tx, txs[1+i]),
+			     type_to_string(trc, struct btcnano_tx, txs[1+i]),
 			     tal_hex(trc, wscripts[1+i]),
 			     type_to_string(trc, struct pubkey,
 					    &local_htlckey));
@@ -1059,7 +1059,7 @@ static u8 *got_commitsig_msg(const tal_t *ctx,
 			     const secp256k1_ecdsa_signature *commit_sig,
 			     const secp256k1_ecdsa_signature *htlc_sigs,
 			     const struct htlc **changed_htlcs,
-			     const struct bitcoin_tx *committx)
+			     const struct btcnano_tx *committx)
 {
 	const tal_t *tmpctx = tal_tmpctx(ctx);
 	struct changed_htlc *changed;
@@ -1133,7 +1133,7 @@ static void handle_peer_commit_sig(struct peer *peer, const u8 *msg)
 	struct channel_id channel_id;
 	secp256k1_ecdsa_signature commit_sig, *htlc_sigs;
 	struct pubkey remote_htlckey, point;
-	struct bitcoin_tx **txs;
+	struct btcnano_tx **txs;
 	const struct htlc **htlc_map, **changed_htlcs;
 	const u8 **wscripts;
 	size_t i;
@@ -1198,7 +1198,7 @@ static void handle_peer_commit_sig(struct peer *peer, const u8 *msg)
 			    peer->next_index[LOCAL],
 			    type_to_string(msg, secp256k1_ecdsa_signature,
 					   &commit_sig),
-			    type_to_string(msg, struct bitcoin_tx, txs[0]),
+			    type_to_string(msg, struct btcnano_tx, txs[0]),
 			    tal_hex(msg, wscripts[0]),
 			    type_to_string(msg, struct pubkey,
 					   &peer->channel->funding_pubkey
@@ -1232,7 +1232,7 @@ static void handle_peer_commit_sig(struct peer *peer, const u8 *msg)
 				    &peer->channel_id,
 				    "Bad commit_sig signature %s for htlc %s wscript %s key %s",
 				    type_to_string(msg, secp256k1_ecdsa_signature, &htlc_sigs[i]),
-				    type_to_string(msg, struct bitcoin_tx, txs[1+i]),
+				    type_to_string(msg, struct btcnano_tx, txs[1+i]),
 				    tal_hex(msg, wscripts[1+i]),
 				    type_to_string(msg, struct pubkey,
 						   &remote_htlckey));
@@ -2067,7 +2067,7 @@ static void handle_feerates(struct peer *peer, const u8 *inmsg)
 
 	/* BOLT #2:
 	 *
-	 * The node which is responsible for paying the bitcoin fee SHOULD
+	 * The node which is responsible for paying the btcnano fee SHOULD
 	 * send `update_fee` to ensure the current fee rate is sufficient for
 	 * timely processing of the commitment transaction by a significant
 	 * margin. */
@@ -2077,7 +2077,7 @@ static void handle_feerates(struct peer *peer, const u8 *inmsg)
 	} else {
 		/* BOLT #2:
 		 *
-		 * The node which is not responsible for paying the bitcoin
+		 * The node which is not responsible for paying the btcnano
 		 * fee MUST NOT send `update_fee`.
 		 */
 		/* FIXME: We could drop to chain if fees are too low, but
@@ -2416,7 +2416,7 @@ static void init_channel(struct peer *peer)
 	u16 funding_txout;
 	u64 local_msatoshi;
 	struct pubkey funding_pubkey[NUM_SIDES];
-	struct bitcoin_txid funding_txid;
+	struct btcnano_txid funding_txid;
 	enum side funder;
 	enum htlc_state *hstates;
 	struct fulfilled_htlc *fulfilled;
@@ -2590,8 +2590,8 @@ int main(int argc, char *argv[])
 	for (i = 0; i < NUM_SIDES; i++) {
 		memset(&peer->announcement_node_sigs[i], 0,
 		       sizeof(peer->announcement_node_sigs[i]));
-		memset(&peer->announcement_bitcoin_sigs[i], 0,
-		       sizeof(peer->announcement_bitcoin_sigs[i]));
+		memset(&peer->announcement_btcnano_sigs[i], 0,
+		       sizeof(peer->announcement_btcnano_sigs[i]));
 	}
 
 	/* Read init_channel message sync. */
