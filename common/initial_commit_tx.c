@@ -1,5 +1,5 @@
-#include <bitcoin/script.h>
-#include <bitcoin/tx.h>
+#include <btcnano/script.h>
+#include <btcnano/tx.h>
 #include <ccan/endian/endian.h>
 #include <common/initial_commit_tx.h>
 #include <common/keyset.h>
@@ -49,13 +49,13 @@ u8 *to_self_wscript(const tal_t *ctx,
 		    u16 to_self_delay,
 		    const struct keyset *keyset)
 {
-	return bitcoin_wscript_to_local(ctx, to_self_delay,
+	return btcnano_wscript_to_local(ctx, to_self_delay,
 					&keyset->self_revocation_key,
 					&keyset->self_delayed_payment_key);
 }
 
-struct bitcoin_tx *initial_commit_tx(const tal_t *ctx,
-				     const struct bitcoin_txid *funding_txid,
+struct btcnano_tx *initial_commit_tx(const tal_t *ctx,
+				     const struct btcnano_txid *funding_txid,
 				     unsigned int funding_txout,
 				     u64 funding_satoshis,
 				     enum side funder,
@@ -70,7 +70,7 @@ struct bitcoin_tx *initial_commit_tx(const tal_t *ctx,
 {
 	const tal_t *tmpctx = tal_tmpctx(ctx);
 	u64 base_fee_msat;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	size_t n, untrimmed;
 
 	assert(self_pay_msat + other_pay_msat <= funding_satoshis * 1000);
@@ -98,7 +98,7 @@ struct bitcoin_tx *initial_commit_tx(const tal_t *ctx,
 			 &self_pay_msat, &other_pay_msat);
 
 	/* Worst-case sizing: both to-local and to-remote outputs. */
-	tx = bitcoin_tx(ctx, 1, untrimmed + 2);
+	tx = btcnano_tx(ctx, 1, untrimmed + 2);
 
 	/* This could be done in a single loop, but we follow the BOLT
 	 * literally to make comments in test vectors clearer. */

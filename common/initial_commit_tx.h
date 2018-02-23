@@ -2,7 +2,7 @@
 #ifndef LIGHTNING_COMMON_INITIAL_COMMIT_TX_H
 #define LIGHTNING_COMMON_INITIAL_COMMIT_TX_H
 #include "config.h"
-#include <bitcoin/pubkey.h>
+#include <btcnano/pubkey.h>
 #include <common/htlc.h>
 
 struct keyset;
@@ -65,8 +65,8 @@ static inline u64 commit_tx_base_fee(u32 feerate_per_kw,
  * but the BOLT is expressed in terms of generating our local commitment
  * transaction, so we carefully use the terms "self" and "other" here.
  */
-struct bitcoin_tx *initial_commit_tx(const tal_t *ctx,
-				     const struct bitcoin_txid *funding_txid,
+struct btcnano_tx *initial_commit_tx(const tal_t *ctx,
+				     const struct btcnano_txid *funding_txid,
 				     unsigned int funding_txout,
 				     u64 funding_satoshis,
 				     enum side funder,
