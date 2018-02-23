@@ -35,7 +35,7 @@ hsm_sign_funding,,num_inputs,u16
 hsm_sign_funding,,inputs,num_inputs*struct utxo
 
 hsm_sign_funding_reply,104
-hsm_sign_funding_reply,,tx,struct bitcoin_tx
+hsm_sign_funding_reply,,tx,struct btcnano_tx
 
 # Master asks the HSM to sign a node_announcement
 hsm_node_announcement_sig_req,6
@@ -56,7 +56,7 @@ hsm_sign_withdrawal,,num_inputs,u16
 hsm_sign_withdrawal,,inputs,num_inputs*struct utxo
 
 hsm_sign_withdrawal_reply,107
-hsm_sign_withdrawal_reply,,tx,struct bitcoin_tx
+hsm_sign_withdrawal_reply,,tx,struct btcnano_tx
 
 # Sign an invoice
 hsm_sign_invoice,8
@@ -75,7 +75,7 @@ hsm_ecdh_resp,100
 hsm_ecdh_resp,,ss,struct secret
 
 hsm_cannouncement_sig_req,2
-hsm_cannouncement_sig_req,,bitcoin_id,struct pubkey
+hsm_cannouncement_sig_req,,btcnano_id,struct pubkey
 hsm_cannouncement_sig_req,,calen,u16
 hsm_cannouncement_sig_req,,ca,calen*u8
 
