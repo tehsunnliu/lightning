@@ -1,7 +1,7 @@
 #include "wire.h"
-#include <bitcoin/preimage.h>
-#include <bitcoin/shadouble.h>
-#include <bitcoin/tx.h>
+#include <btcnano/preimage.h>
+#include <btcnano/shadouble.h>
+#include <btcnano/tx.h>
 #include <ccan/crypto/ripemd160/ripemd160.h>
 #include <ccan/endian/endian.h>
 #include <ccan/mem/mem.h>
@@ -117,12 +117,12 @@ void towire_sha256_double(u8 **pptr, const struct sha256_double *sha256d)
 	towire_sha256(pptr, &sha256d->sha);
 }
 
-void towire_bitcoin_txid(u8 **pptr, const struct bitcoin_txid *txid)
+void towire_btcnano_txid(u8 **pptr, const struct btcnano_txid *txid)
 {
 	towire_sha256_double(pptr, &txid->shad);
 }
 
-void towire_bitcoin_blkid(u8 **pptr, const struct bitcoin_blkid *blkid)
+void towire_btcnano_blkid(u8 **pptr, const struct btcnano_blkid *blkid)
 {
 	towire_sha256_double(pptr, &blkid->shad);
 }
@@ -151,7 +151,7 @@ void towire_pad(u8 **pptr, size_t num)
 	memset(*pptr + oldsize, 0, num);
 }
 
-void towire_bitcoin_tx(u8 **pptr, const struct bitcoin_tx *tx)
+void towire_btcnano_tx(u8 **pptr, const struct btcnano_tx *tx)
 {
 	tal_t *tmpctx = tal_tmpctx(NULL);
 	u8 *lin = linearize_tx(tmpctx, tx);
