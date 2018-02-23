@@ -32,7 +32,7 @@ opening_funder,,bip32,struct ext_key
 # This gives their sig, means we can broadcast tx: we're done.
 opening_funder_reply,6101
 opening_funder_reply,,their_config,struct channel_config
-opening_funder_reply,,first_commit,struct bitcoin_tx
+opening_funder_reply,,first_commit,struct btcnano_tx
 opening_funder_reply,,first_commit_sig,secp256k1_ecdsa_signature
 opening_funder_reply,,crypto_state,struct crypto_state
 opening_funder_reply,,gossip_index,u64
@@ -43,7 +43,7 @@ opening_funder_reply,,delayed_payment_basepoint,struct pubkey
 opening_funder_reply,,their_per_commit_point,struct pubkey
 opening_funder_reply,,minimum_depth,u32
 opening_funder_reply,,remote_fundingkey,struct pubkey
-opening_funder_reply,,funding_txid,struct bitcoin_txid
+opening_funder_reply,,funding_txid,struct btcnano_txid
 opening_funder_reply,,feerate_per_kw,u32
 
 # This means they offer the open (contains their offer packet)
@@ -57,7 +57,7 @@ opening_fundee,,msg,len*u8
 # This gives their txid and info, means we can send funding_signed: we're done.
 opening_fundee_reply,6103
 opening_fundee_reply,,their_config,struct channel_config
-opening_fundee_reply,,first_commit,struct bitcoin_tx
+opening_fundee_reply,,first_commit,struct btcnano_tx
 opening_fundee_reply,,first_commit_sig,secp256k1_ecdsa_signature
 opening_fundee_reply,,crypto_state,struct crypto_state
 opening_fundee_reply,,gossip_index,u64
@@ -67,7 +67,7 @@ opening_fundee_reply,,htlc_basepoint,struct pubkey
 opening_fundee_reply,,delayed_payment_basepoint,struct pubkey
 opening_fundee_reply,,their_per_commit_point,struct pubkey
 opening_fundee_reply,,remote_fundingkey,struct pubkey
-opening_fundee_reply,,funding_txid,struct bitcoin_txid
+opening_fundee_reply,,funding_txid,struct btcnano_txid
 opening_fundee_reply,,funding_txout,u16
 opening_fundee_reply,,funding_satoshis,u64
 opening_fundee_reply,,push_msat,u64
