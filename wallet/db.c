@@ -511,7 +511,7 @@ sqlite3_column_short_channel_id_array(const tal_t *ctx,
 	return ret;
 }
 
-bool sqlite3_bind_tx(sqlite3_stmt *stmt, int col, const struct bitcoin_tx *tx)
+bool sqlite3_bind_tx(sqlite3_stmt *stmt, int col, const struct btcnano_tx *tx)
 {
 	u8 *ser = linearize_tx(NULL, tx);
 	sqlite3_bind_blob(stmt, col, ser, tal_len(ser), SQLITE_TRANSIENT);
@@ -519,12 +519,12 @@ bool sqlite3_bind_tx(sqlite3_stmt *stmt, int col, const struct bitcoin_tx *tx)
 	return true;
 }
 
-struct bitcoin_tx *sqlite3_column_tx(const tal_t *ctx, sqlite3_stmt *stmt,
+struct btcnano_tx *sqlite3_column_tx(const tal_t *ctx, sqlite3_stmt *stmt,
 				     int col)
 {
 	const u8 *src = sqlite3_column_blob(stmt, col);
 	size_t len = sqlite3_column_bytes(stmt, col);
-	return pull_bitcoin_tx(ctx, &src, &len);
+	return pull_btcnano_tx(ctx, &src, &len);
 }
 bool sqlite3_bind_signature(sqlite3_stmt *stmt, int col,
 			    const secp256k1_ecdsa_signature *sig)

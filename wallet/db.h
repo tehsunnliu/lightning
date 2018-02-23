@@ -2,10 +2,10 @@
 #define WALLET_DB_H
 
 #include "config.h"
-#include <bitcoin/pubkey.h>
-#include <bitcoin/preimage.h>
-#include <bitcoin/short_channel_id.h>
-#include <bitcoin/tx.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/preimage.h>
+#include <btcnano/short_channel_id.h>
+#include <btcnano/tx.h>
 #include <ccan/short_types/short_types.h>
 #include <ccan/tal/tal.h>
 
@@ -122,8 +122,8 @@ bool sqlite3_bind_short_channel_id_array(sqlite3_stmt *stmt, int col,
 struct short_channel_id *
 sqlite3_column_short_channel_id_array(const tal_t *ctx,
 				      sqlite3_stmt *stmt, int col);
-bool sqlite3_bind_tx(sqlite3_stmt *stmt, int col, const struct bitcoin_tx *tx);
-struct bitcoin_tx *sqlite3_column_tx(const tal_t *ctx, sqlite3_stmt *stmt,
+bool sqlite3_bind_tx(sqlite3_stmt *stmt, int col, const struct btcnano_tx *tx);
+struct btcnano_tx *sqlite3_column_tx(const tal_t *ctx, sqlite3_stmt *stmt,
 				     int col);
 bool sqlite3_bind_signature(sqlite3_stmt *stmt, int col, const secp256k1_ecdsa_signature *sig);
 bool sqlite3_column_signature(sqlite3_stmt *stmt, int col, secp256k1_ecdsa_signature *sig);
