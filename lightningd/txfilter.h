@@ -1,8 +1,8 @@
 #ifndef LIGHTNING_LIGHTNINGD_TXFILTER_H
 #define LIGHTNING_LIGHTNINGD_TXFILTER_H
 #include "config.h"
-#include <bitcoin/pubkey.h>
-#include <bitcoin/tx.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/tx.h>
 #include <ccan/short_types/short_types.h>
 #include <ccan/tal/tal.h>
 
@@ -26,7 +26,7 @@ void txfilter_add_derkey(struct txfilter *filter, u8 derkey[PUBKEY_DER_LEN]);
 /**
  * txfilter_match -- Check whether the tx matches the filter
  */
-bool txfilter_match(const struct txfilter *filter, const struct bitcoin_tx *tx);
+bool txfilter_match(const struct txfilter *filter, const struct btcnano_tx *tx);
 
 /**
  * txfilter_add_scriptpubkey -- Add a serialized scriptpubkey to the filter

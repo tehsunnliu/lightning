@@ -1,6 +1,6 @@
 #include "txfilter.h"
 
-#include <bitcoin/script.h>
+#include <btcnano/script.h>
 #include <ccan/crypto/ripemd160/ripemd160.h>
 #include <common/utils.h>
 
@@ -39,7 +39,7 @@ void txfilter_add_derkey(struct txfilter *filter, u8 derkey[PUBKEY_DER_LEN])
 }
 
 
-bool txfilter_match(const struct txfilter *filter, const struct bitcoin_tx *tx)
+bool txfilter_match(const struct txfilter *filter, const struct btcnano_tx *tx)
 {
 	u8 *oscript;
 	for (size_t i = 0; i < tal_count(tx->output); i++) {
