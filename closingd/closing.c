@@ -1,4 +1,4 @@
-#include <bitcoin/script.h>
+#include <btcnano/script.h>
 #include <ccan/structeq/structeq.h>
 #include <closingd/gen_closing_wire.h>
 #include <common/close_tx.h>
@@ -25,11 +25,11 @@
 #define PEER_FD 3
 #define GOSSIP_FD 4
 
-static struct bitcoin_tx *close_tx(const tal_t *ctx,
+static struct btcnano_tx *close_tx(const tal_t *ctx,
 				   struct crypto_state *cs,
 				   const struct channel_id *channel_id,
 				   u8 *scriptpubkey[NUM_SIDES],
-				   const struct bitcoin_txid *funding_txid,
+				   const struct btcnano_txid *funding_txid,
 				   unsigned int funding_txout,
 				   u64 funding_satoshi,
 				   const u64 satoshi_out[NUM_SIDES],
@@ -37,7 +37,7 @@ static struct bitcoin_tx *close_tx(const tal_t *ctx,
 				   uint64_t fee,
 				   uint64_t dust_limit)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 
 	if (satoshi_out[funder] < fee)
 		peer_failed(PEER_FD, cs, channel_id,
@@ -153,7 +153,7 @@ static void send_offer(struct crypto_state *cs,
 		       const struct pubkey funding_pubkey[NUM_SIDES],
 		       const u8 *funding_wscript,
 		       u8 *scriptpubkey[NUM_SIDES],
-		       const struct bitcoin_txid *funding_txid,
+		       const struct btcnano_txid *funding_txid,
 		       unsigned int funding_txout,
 		       u64 funding_satoshi,
 		       const u64 satoshi_out[NUM_SIDES],
@@ -163,7 +163,7 @@ static void send_offer(struct crypto_state *cs,
 		       uint64_t fee_to_offer)
 {
 	const tal_t *tmpctx = tal_tmpctx(NULL);
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	secp256k1_ecdsa_signature our_sig;
 	u8 *msg;
 
@@ -206,7 +206,7 @@ static void send_offer(struct crypto_state *cs,
 
 static void tell_master_their_offer(u64 their_offer,
 				    const secp256k1_ecdsa_signature *their_sig,
-				    const struct bitcoin_tx *tx)
+				    const struct btcnano_tx *tx)
 {
 	u8 *msg = towire_closing_received_signature(NULL, their_sig, tx);
 	if (!wire_sync_write(REQ_FD, take(msg)))
@@ -227,7 +227,7 @@ static uint64_t receive_offer(struct crypto_state *cs,
 			      const struct pubkey funding_pubkey[NUM_SIDES],
 			      const u8 *funding_wscript,
 			      u8 *scriptpubkey[NUM_SIDES],
-			      const struct bitcoin_txid *funding_txid,
+			      const struct btcnano_txid *funding_txid,
 			      unsigned int funding_txout,
 			      u64 funding_satoshi,
 			      const u64 satoshi_out[NUM_SIDES],
@@ -240,7 +240,7 @@ static uint64_t receive_offer(struct crypto_state *cs,
 	struct channel_id their_channel_id;
 	u64 received_fee;
 	secp256k1_ecdsa_signature their_sig;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 
 	/* Wait for them to say something interesting */
 	do {
@@ -287,7 +287,7 @@ static uint64_t receive_offer(struct crypto_state *cs,
 	if (!check_tx_sig(tx, 0, NULL, funding_wscript,
 			  &funding_pubkey[REMOTE], &their_sig)) {
 		/* Trim it by reducing their output to minimum */
-		struct bitcoin_tx *trimmed;
+		struct btcnano_tx *trimmed;
 		u64 trimming_satoshi_out[NUM_SIDES];
 
 		if (funder == REMOTE)
@@ -317,11 +317,11 @@ static uint64_t receive_offer(struct crypto_state *cs,
 				    "Bad closing_signed signature for"
 				    " %s (and trimmed version %s)",
 				    type_to_string(tmpctx,
-						   struct bitcoin_tx,
+						   struct btcnano_tx,
 						   tx),
 				    trimmed ?
 				    type_to_string(tmpctx,
-						   struct bitcoin_tx,
+						   struct btcnano_tx,
 						   trimmed)
 				    : "NONE");
 		}
@@ -437,7 +437,7 @@ int main(int argc, char *argv[])
 	u8 *msg;
 	struct privkey seed;
 	struct pubkey funding_pubkey[NUM_SIDES];
-	struct bitcoin_txid funding_txid;
+	struct btcnano_txid funding_txid;
 	u16 funding_txout;
 	u64 funding_satoshi, satoshi_out[NUM_SIDES];
 	u64 our_dust_limit;
@@ -486,7 +486,7 @@ int main(int argc, char *argv[])
 	derive_basepoints(&seed, &funding_pubkey[LOCAL], NULL,
 			  &secrets, NULL);
 
-	funding_wscript = bitcoin_redeem_2of2(ctx,
+	funding_wscript = btcnano_redeem_2of2(ctx,
 					      &funding_pubkey[LOCAL],
 					      &funding_pubkey[REMOTE]);
 
