@@ -1,9 +1,9 @@
 #ifndef LIGHTNING_COMMON_UTXO_H
 #define LIGHTNING_COMMON_UTXO_H
 #include "config.h"
-#include <bitcoin/pubkey.h>
-#include <bitcoin/shadouble.h>
-#include <bitcoin/tx.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/shadouble.h>
+#include <btcnano/tx.h>
 #include <ccan/short_types/short_types.h>
 #include <ccan/tal/tal.h>
 #include <stdbool.h>
@@ -16,7 +16,7 @@ struct unilateral_close_info {
 };
 
 struct utxo {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	u32 outnum;
 	u64 amount;
 	u32 keyindex;
