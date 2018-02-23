@@ -26,7 +26,7 @@
  * Returns state, or NULL if malformed.
  */
 struct channel *new_channel(const tal_t *ctx,
-			    const struct bitcoin_txid *funding_txid,
+			    const struct btcnano_txid *funding_txid,
 			    unsigned int funding_txout,
 			    u64 funding_satoshis,
 			    u64 local_msatoshi,
@@ -53,7 +53,7 @@ struct channel *new_channel(const tal_t *ctx,
  * for @side, followed by the htlc transactions in output order and
  * fills in @htlc_map, or NULL on key derivation failure.
  */
-struct bitcoin_tx **channel_txs(const tal_t *ctx,
+struct btcnano_tx **channel_txs(const tal_t *ctx,
 				const struct htlc ***htlcmap,
 				const u8 ***wscripts,
 				const struct channel *channel,
