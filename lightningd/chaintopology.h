@@ -98,9 +98,6 @@ struct chain_topology {
 	/* The btcnanod. */
 	struct btcnanod *btcnanod;
 
-	/* The btcnanod. */
-	struct btcnanod *btcnanod;
-	
 	/* Our timer list. */
 	struct timers *timers;
 
