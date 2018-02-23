@@ -91,7 +91,7 @@ bool json_tok_number(const char *buffer, const jsmntok_t *tok,
 	return true;
 }
 
-bool json_tok_bitcoin_amount(const char *buffer, const jsmntok_t *tok,
+bool json_tok_btcnano_amount(const char *buffer, const jsmntok_t *tok,
 			     uint64_t *satoshi)
 {
 	char *end;
