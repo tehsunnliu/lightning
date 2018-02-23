@@ -1,9 +1,9 @@
 #include "invoice.h"
 #include "jsonrpc.h"
 #include "lightningd.h"
-#include <bitcoin/address.h>
-#include <bitcoin/base58.h>
-#include <bitcoin/script.h>
+#include <btcnano/address.h>
+#include <btcnano/base58.h>
+#include <btcnano/script.h>
 #include <ccan/str/hex/hex.h>
 #include <ccan/structeq/structeq.h>
 #include <ccan/tal/str/str.h>
@@ -469,7 +469,7 @@ static void json_decodepay(struct command *cmd,
 	json_add_num(response, "min_final_cltv_expiry",
 		     b11->min_final_cltv_expiry);
         if (tal_len(b11->fallback)) {
-                struct bitcoin_address pkh;
+                struct btcnano_address pkh;
                 struct ripemd160 sh;
                 struct sha256 wsh;
 
@@ -477,7 +477,7 @@ static void json_decodepay(struct command *cmd,
                 if (is_p2pkh(b11->fallback, &pkh)) {
                         json_add_string(response, "type", "P2PKH");
                         json_add_string(response, "addr",
-                                        bitcoin_to_base58(cmd,
+                                        btcnano_to_base58(cmd,
                                                           b11->chain->testnet,
                                                           &pkh));
                 } else if (is_p2sh(b11->fallback, &sh)) {
