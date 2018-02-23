@@ -1,7 +1,7 @@
 #include "routing.h"
 #include <arpa/inet.h>
-#include <bitcoin/block.h>
-#include <bitcoin/script.h>
+#include <btcnano/block.h>
+#include <btcnano/script.h>
 #include <ccan/array_size/array_size.h>
 #include <ccan/crypto/siphash24/siphash24.h>
 #include <ccan/endian/endian.h>
@@ -36,8 +36,8 @@ struct pending_cannouncement {
 	struct short_channel_id short_channel_id;
 	struct pubkey node_id_1;
 	struct pubkey node_id_2;
-	struct pubkey bitcoin_key_1;
-	struct pubkey bitcoin_key_2;
+	struct pubkey btcnano_key_1;
+	struct pubkey btcnano_key_2;
 
 	/* The raw bits */
 	const u8 *announce;
@@ -91,7 +91,7 @@ static struct node_map *empty_node_map(const tal_t *ctx)
 }
 
 struct routing_state *new_routing_state(const tal_t *ctx,
-					const struct bitcoin_blkid *chain_hash,
+					const struct btcnano_blkid *chain_hash,
 					const struct pubkey *local_id)
 {
 	struct routing_state *rstate = tal(ctx, struct routing_state);
@@ -548,11 +548,11 @@ static bool check_channel_update(const struct pubkey *node_key,
 
 static bool check_channel_announcement(
     const struct pubkey *node1_key, const struct pubkey *node2_key,
-    const struct pubkey *bitcoin1_key, const struct pubkey *bitcoin2_key,
+    const struct pubkey *btcnano1_key, const struct pubkey *btcnano2_key,
     const secp256k1_ecdsa_signature *node1_sig,
     const secp256k1_ecdsa_signature *node2_sig,
-    const secp256k1_ecdsa_signature *bitcoin1_sig,
-    const secp256k1_ecdsa_signature *bitcoin2_sig, const u8 *announcement)
+    const secp256k1_ecdsa_signature *btcnano1_sig,
+    const secp256k1_ecdsa_signature *btcnano2_sig, const u8 *announcement)
 {
 	/* 2 byte msg type + 256 byte signatures */
 	int offset = 258;
@@ -562,8 +562,8 @@ static bool check_channel_announcement(
 
 	return check_signed_hash(&hash, node1_sig, node1_key) &&
 	       check_signed_hash(&hash, node2_sig, node2_key) &&
-	       check_signed_hash(&hash, bitcoin1_sig, bitcoin1_key) &&
-	       check_signed_hash(&hash, bitcoin2_sig, bitcoin2_key);
+	       check_signed_hash(&hash, btcnano1_sig, btcnano1_key) &&
+	       check_signed_hash(&hash, btcnano2_sig, btcnano2_key);
 }
 
 struct routing_channel *routing_channel_new(const tal_t *ctx,
@@ -634,10 +634,10 @@ const struct short_channel_id *handle_channel_announcement(
 	const u8 *announce TAKES)
 {
 	struct pending_cannouncement *pending;
-	struct bitcoin_blkid chain_hash;
+	struct btcnano_blkid chain_hash;
 	u8 *features;
 	secp256k1_ecdsa_signature node_signature_1, node_signature_2;
-	secp256k1_ecdsa_signature bitcoin_signature_1, bitcoin_signature_2;
+	secp256k1_ecdsa_signature btcnano_signature_1, btcnano_signature_2;
 	u64 scid;
 	struct routing_channel *chan;
 
@@ -651,15 +651,15 @@ const struct short_channel_id *handle_channel_announcement(
 	if (!fromwire_channel_announcement(pending, pending->announce, NULL,
 					   &node_signature_1,
 					   &node_signature_2,
-					   &bitcoin_signature_1,
-					   &bitcoin_signature_2,
+					   &btcnano_signature_1,
+					   &btcnano_signature_2,
 					   &features,
 					   &chain_hash,
 					   &pending->short_channel_id,
 					   &pending->node_id_1,
 					   &pending->node_id_2,
-					   &pending->bitcoin_key_1,
-					   &pending->bitcoin_key_2)) {
+					   &pending->btcnano_key_1,
+					   &pending->btcnano_key_2)) {
 		tal_free(pending);
 		return NULL;
 	}
@@ -698,18 +698,18 @@ const struct short_channel_id *handle_channel_announcement(
 		    "Received channel_announcement %s for unknown chain %s",
 		    type_to_string(pending, struct short_channel_id,
 				   &pending->short_channel_id),
-		    type_to_string(pending, struct bitcoin_blkid, &chain_hash));
+		    type_to_string(pending, struct btcnano_blkid, &chain_hash));
 		tal_free(pending);
 		return NULL;
 	}
 
 	if (!check_channel_announcement(&pending->node_id_1, &pending->node_id_2,
-					&pending->bitcoin_key_1,
-					&pending->bitcoin_key_2,
+					&pending->btcnano_key_1,
+					&pending->btcnano_key_2,
 					&node_signature_1,
 					&node_signature_2,
-					&bitcoin_signature_1,
-					&bitcoin_signature_2,
+					&btcnano_signature_1,
+					&btcnano_signature_2,
 					pending->announce)) {
 		status_trace("Signature verification of channel_announcement"
 			     " for %s failed",
@@ -778,14 +778,14 @@ bool handle_pending_cannouncement(struct routing_state *rstate,
 	 *
 	 * The receiving node MUST ignore the message if the output
 	 * specified by `short_channel_id` does not correspond to a
-	 * P2WSH using `bitcoin_key_1` and `bitcoin_key_2` as
+	 * P2WSH using `btcnano_key_1` and `btcnano_key_2` as
 	 * specified in [BOLT
 	 * #3](03-transactions.md#funding-transaction-output).
 	 */
 	s = scriptpubkey_p2wsh(pending,
-			       bitcoin_redeem_2of2(pending,
-						   &pending->bitcoin_key_1,
-						   &pending->bitcoin_key_2));
+			       btcnano_redeem_2of2(pending,
+						   &pending->btcnano_key_1,
+						   &pending->btcnano_key_2));
 
 	if (!scripteq(s, outscript)) {
 		status_trace("channel_announcement: txout %s expectes %s, got %s",
@@ -874,7 +874,7 @@ void handle_channel_update(struct routing_state *rstate, const u8 *update)
 	u32 fee_base_msat;
 	u32 fee_proportional_millionths;
 	const tal_t *tmpctx = tal_tmpctx(rstate);
-	struct bitcoin_blkid chain_hash;
+	struct btcnano_blkid chain_hash;
 	struct routing_channel *chan;
 	u8 direction;
 	size_t len = tal_len(update);
@@ -897,7 +897,7 @@ void handle_channel_update(struct routing_state *rstate, const u8 *update)
 	 * specified chain. */
 	if (!structeq(&chain_hash, &rstate->chain_hash)) {
 		status_trace("Received channel_update for unknown chain %s",
-			     type_to_string(tmpctx, struct bitcoin_blkid,
+			     type_to_string(tmpctx, struct btcnano_blkid,
 					    &chain_hash));
 		tal_free(tmpctx);
 		return;
