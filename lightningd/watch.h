@@ -1,14 +1,14 @@
 #ifndef LIGHTNING_LIGHTNINGD_WATCH_H
 #define LIGHTNING_LIGHTNINGD_WATCH_H
 #include "config.h"
-#include <bitcoin/tx.h>
+#include <btcnano/tx.h>
 #include <ccan/crypto/ripemd160/ripemd160.h>
 #include <ccan/htable/htable_type.h>
 #include <ccan/list/list.h>
 #include <ccan/short_types/short_types.h>
 #include <ccan/typesafe_cb/typesafe_cb.h>
 
-struct bitcoin_tx;
+struct btcnano_tx;
 struct block;
 
 enum watch_result {
@@ -17,7 +17,7 @@ enum watch_result {
 };
 
 struct txwatch_output {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	unsigned int index;
 };
 
@@ -33,7 +33,7 @@ struct txowatch {
 
 	/* A new tx. */
 	enum watch_result (*cb)(struct peer *peer,
-				const struct bitcoin_tx *tx,
+				const struct btcnano_tx *tx,
 				size_t input_num,
 				const struct block *block,
 				void *cbdata);
@@ -55,21 +55,21 @@ struct txwatch {
 	struct peer *peer;
 
 	/* Transaction to watch. */
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	unsigned int depth;
 
 	/* A new depth (0 if kicked out, otherwise 1 = tip, etc.) */
 	enum watch_result (*cb)(struct peer *peer,
-				const struct bitcoin_tx *tx,
+				const struct btcnano_tx *tx,
 				unsigned int depth,
 				void *cbdata);
 
 	void *cbdata;
 };
 
-const struct bitcoin_txid *txwatch_keyof(const struct txwatch *w);
-size_t txid_hash(const struct bitcoin_txid *txid);
-bool txwatch_eq(const struct txwatch *w, const struct bitcoin_txid *txid);
+const struct btcnano_txid *txwatch_keyof(const struct txwatch *w);
+size_t txid_hash(const struct btcnano_txid *txid);
+bool txwatch_eq(const struct txwatch *w, const struct btcnano_txid *txid);
 HTABLE_DEFINE_TYPE(struct txwatch, txwatch_keyof, txid_hash, txwatch_eq,
 		   txwatch_hash);
 
@@ -77,9 +77,9 @@ HTABLE_DEFINE_TYPE(struct txwatch, txwatch_keyof, txid_hash, txwatch_eq,
 struct txwatch *watch_txid_(const tal_t *ctx,
 			    struct chain_topology *topo,
 			    struct peer *peer,
-			    const struct bitcoin_txid *txid,
+			    const struct btcnano_txid *txid,
 			    enum watch_result (*cb)(struct peer *peer,
-						    const struct bitcoin_tx *,
+						    const struct btcnano_tx *,
 						    unsigned int depth,
 						    void *),
 			    void *cbdata);
@@ -89,16 +89,16 @@ struct txwatch *watch_txid_(const tal_t *ctx,
 		    typesafe_cb_preargs(enum watch_result, void *,	\
 					(cb), (cbdata),			\
 					struct peer *,			\
-					const struct bitcoin_tx *,	\
+					const struct btcnano_tx *,	\
 					unsigned int depth),		\
 		    (cbdata))
 
 struct txwatch *watch_tx_(const tal_t *ctx,
 			  struct chain_topology *topo,
 			  struct peer *peer,
-			  const struct bitcoin_tx *tx,
+			  const struct btcnano_tx *tx,
 			  enum watch_result (*cb)(struct peer *peer,
-						  const struct bitcoin_tx *,
+						  const struct btcnano_tx *,
 						  unsigned int depth,
 						  void *),
 			  void *cbdata);
@@ -108,17 +108,17 @@ struct txwatch *watch_tx_(const tal_t *ctx,
 		  typesafe_cb_preargs(enum watch_result, void *,	\
 				      (cb), (cbdata),			\
 				      struct peer *,			\
-				      const struct bitcoin_tx *,	\
+				      const struct btcnano_tx *,	\
 				      unsigned int depth),		\
 		  (cbdata))
 
 struct txowatch *watch_txo_(const tal_t *ctx,
 			    struct chain_topology *topo,
 			    struct peer *peer,
-			    const struct bitcoin_txid *txid,
+			    const struct btcnano_txid *txid,
 			    unsigned int output,
 			    enum watch_result (*cb)(struct peer *peer,
-						    const struct bitcoin_tx *tx,
+						    const struct btcnano_tx *tx,
 						    size_t input_num,
 						    const struct block *block,
 						    void *),
@@ -129,26 +129,26 @@ struct txowatch *watch_txo_(const tal_t *ctx,
 		   typesafe_cb_preargs(enum watch_result, void *,	\
 				      (cb), (cbdata),			\
 				      struct peer *,			\
-				      const struct bitcoin_tx *,	\
+				      const struct btcnano_tx *,	\
 				       size_t,				\
 				       const struct block *block),	\
 		  (cbdata))
 
 struct txwatch *find_txwatch(struct chain_topology *topo,
-			     const struct bitcoin_txid *txid,
+			     const struct btcnano_txid *txid,
 			     const struct peer *peer);
 
 void txwatch_fire(struct chain_topology *topo,
-		  const struct bitcoin_tx *tx,
+		  const struct btcnano_tx *tx,
 		  unsigned int depth);
 
 void txowatch_fire(struct chain_topology *topo,
 		   const struct txowatch *txow,
-		   const struct bitcoin_tx *tx, size_t input_num,
+		   const struct btcnano_tx *tx, size_t input_num,
 		   const struct block *block);
 
 bool watching_txid(const struct chain_topology *topo,
-		   const struct bitcoin_txid *txid);
+		   const struct btcnano_txid *txid);
 
 void watch_topology_changed(struct chain_topology *topo);
 #endif /* LIGHTNING_LIGHTNINGD_WATCH_H */
