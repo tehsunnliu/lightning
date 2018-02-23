@@ -33,8 +33,8 @@ static inline u64 htlc_success_fee(u32 feerate_per_kw)
 
 /* Create HTLC-success tx to spend a received HTLC commitment tx
  * output; doesn't fill in input witness. */
-struct bitcoin_tx *htlc_success_tx(const tal_t *ctx,
-				   const struct bitcoin_txid *commit_txid,
+struct btcnano_tx *htlc_success_tx(const tal_t *ctx,
+				   const struct btcnano_txid *commit_txid,
 				   unsigned int commit_output_number,
 				   u64 htlc_msatoshi,
 				   u16 to_self_delay,
@@ -42,7 +42,7 @@ struct bitcoin_tx *htlc_success_tx(const tal_t *ctx,
 				   const struct keyset *keyset);
 
 /* Fill in the witness for HTLC-success tx produced above. */
-void htlc_success_tx_add_witness(struct bitcoin_tx *htlc_success,
+void htlc_success_tx_add_witness(struct btcnano_tx *htlc_success,
 				 const struct abs_locktime *htlc_abstimeout,
 				 const struct pubkey *localkey,
 				 const struct pubkey *remotekey,
@@ -53,8 +53,8 @@ void htlc_success_tx_add_witness(struct bitcoin_tx *htlc_success,
 
 /* Create HTLC-timeout tx to spend an offered HTLC commitment tx
  * output; doesn't fill in input witness. */
-struct bitcoin_tx *htlc_timeout_tx(const tal_t *ctx,
-				   const struct bitcoin_txid *commit_txid,
+struct btcnano_tx *htlc_timeout_tx(const tal_t *ctx,
+				   const struct btcnano_txid *commit_txid,
 				   unsigned int commit_output_number,
 				   u64 htlc_msatoshi,
 				   u32 cltv_expiry,
@@ -63,7 +63,7 @@ struct bitcoin_tx *htlc_timeout_tx(const tal_t *ctx,
 				   const struct keyset *keyset);
 
 /* Fill in the witness for HTLC-timeout tx produced above. */
-void htlc_timeout_tx_add_witness(struct bitcoin_tx *htlc_timeout,
+void htlc_timeout_tx_add_witness(struct btcnano_tx *htlc_timeout,
 				 const struct pubkey *localkey,
 				 const struct pubkey *remotekey,
 				 const struct sha256 *payment_hash,
