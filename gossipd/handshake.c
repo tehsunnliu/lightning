@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <bitcoin/privkey.h>
-#include <bitcoin/pubkey.h>
+#include <btcnano/privkey.h>
+#include <btcnano/pubkey.h>
 #include <ccan/build_assert/build_assert.h>
 #include <ccan/crypto/hkdf_sha256/hkdf_sha256.h>
 #include <ccan/endian/endian.h>
