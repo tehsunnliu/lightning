@@ -1,5 +1,5 @@
-#include <bitcoin/script.h>
-#include <bitcoin/tx.h>
+#include <btcnano/script.h>
+#include <btcnano/tx.h>
 #include <ccan/endian/endian.h>
 #include <channeld/commit_tx.h>
 #include <common/htlc_tx.h>
@@ -53,7 +53,7 @@ size_t commit_tx_num_untrimmed(const struct htlc **htlcs,
 	return n;
 }
 
-static void add_offered_htlc_out(struct bitcoin_tx *tx, size_t n,
+static void add_offered_htlc_out(struct btcnano_tx *tx, size_t n,
 				 const struct htlc *htlc,
 				 const struct keyset *keyset)
 {
@@ -69,7 +69,7 @@ static void add_offered_htlc_out(struct bitcoin_tx *tx, size_t n,
 	tal_free(wscript);
 }
 
-static void add_received_htlc_out(struct bitcoin_tx *tx, size_t n,
+static void add_received_htlc_out(struct btcnano_tx *tx, size_t n,
 				  const struct htlc *htlc,
 				  const struct keyset *keyset)
 {
@@ -85,8 +85,8 @@ static void add_received_htlc_out(struct bitcoin_tx *tx, size_t n,
 	tal_free(wscript);
 }
 
-struct bitcoin_tx *commit_tx(const tal_t *ctx,
-			     const struct bitcoin_txid *funding_txid,
+struct btcnano_tx *commit_tx(const tal_t *ctx,
+			     const struct btcnano_txid *funding_txid,
 			     unsigned int funding_txout,
 			     u64 funding_satoshis,
 			     enum side funder,
@@ -103,7 +103,7 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 {
 	const tal_t *tmpctx = tal_tmpctx(ctx);
 	u64 base_fee_msat;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	size_t i, n, untrimmed;
 
 	assert(self_pay_msat + other_pay_msat <= funding_satoshis * 1000);
@@ -153,7 +153,7 @@ struct bitcoin_tx *commit_tx(const tal_t *ctx,
 #endif
 
 	/* Worst-case sizing: both to-local and to-remote outputs. */
-	tx = bitcoin_tx(ctx, 1, untrimmed + 2);
+	tx = btcnano_tx(ctx, 1, untrimmed + 2);
 
 	/* We keep track of which outputs have which HTLCs */
 	if (htlcmap)
