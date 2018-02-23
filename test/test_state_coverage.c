@@ -84,7 +84,7 @@ struct htlc_spend_watch {
 
 /* No padding, for fast compare and hashing. */
 struct core_state {
-	/* What bitcoin/timeout notifications are we subscribed to? */
+	/* What btcnano/timeout notifications are we subscribed to? */
 	uint64_t event_notifies;
 
 	enum state_input current_command;
@@ -492,16 +492,16 @@ static Pkt *htlc_pkt(const tal_t *ctx, const char *prefix, unsigned int id)
 	return (Pkt *)tal_fmt(ctx, "%s: HTLC #%u", prefix, id);
 }
 
-static unsigned int htlc_id_from_tx(const struct bitcoin_tx *tx)
+static unsigned int htlc_id_from_tx(const struct btcnano_tx *tx)
 {
 	const char *s = strstr((const char *)tx, "HTLC #");
 	return atoi(s + strlen("HTLC #"));
 }
 
-static struct bitcoin_tx *htlc_tx(const tal_t *ctx,
+static struct btcnano_tx *htlc_tx(const tal_t *ctx,
 				  const char *prefix, unsigned int id)
 {
-	return (struct bitcoin_tx *)tal_fmt(ctx, "%s HTLC #%u", prefix, id);
+	return (struct btcnano_tx *)tal_fmt(ctx, "%s HTLC #%u", prefix, id);
 }
 
 static struct htlc *find_any_htlc(const struct htlc *htlcs, size_t num,
@@ -844,62 +844,62 @@ Pkt *accept_pkt_close_ack(const tal_t *ctx,
 	return NULL;
 }
 
-static struct bitcoin_tx *bitcoin_tx(const char *str)
+static struct btcnano_tx *btcnano_tx(const char *str)
 {
-	return (struct bitcoin_tx *)str;
+	return (struct btcnano_tx *)str;
 }
 
-static bool bitcoin_tx_is(const struct bitcoin_tx *btx, const char *str)
+static bool btcnano_tx_is(const struct btcnano_tx *btx, const char *str)
 {
 	return streq((const char *)btx, str);
 }
 
-const struct bitcoin_tx *bitcoin_anchor(const tal_t *ctx, struct peer *peer)
+const struct btcnano_tx *btcnano_anchor(const tal_t *ctx, struct peer *peer)
 {
 	if (!peer->anchor)
 		report_trail(peer->trail, "Can't create anchor tx: no anchor!");
 	peer->anchor = false;
 	peer->anchor_broadcast = true;
-	return bitcoin_tx("anchor");
+	return btcnano_tx("anchor");
 }
 
-const struct bitcoin_tx *bitcoin_close(const tal_t *ctx,
+const struct btcnano_tx *btcnano_close(const tal_t *ctx,
 				       struct peer *peer)
 {
 	peer->anchor_spent = true;
-	return bitcoin_tx("close");
+	return btcnano_tx("close");
 }
 
-const struct bitcoin_tx *bitcoin_spend_ours(const tal_t *ctx,
+const struct btcnano_tx *btcnano_spend_ours(const tal_t *ctx,
 					    const struct peer *peer)
 {
-	return bitcoin_tx("spend our commit");
+	return btcnano_tx("spend our commit");
 }
 
-const struct bitcoin_tx *bitcoin_spend_theirs(const tal_t *ctx,
+const struct btcnano_tx *btcnano_spend_theirs(const tal_t *ctx,
 					      const struct peer *peer,
-					      const struct bitcoin_event *btc)
+					      const struct btcnano_event *btc)
 {
-	return bitcoin_tx("spend their commit");
+	return btcnano_tx("spend their commit");
 }
 
-const struct bitcoin_tx *bitcoin_steal(const tal_t *ctx,
+const struct btcnano_tx *btcnano_steal(const tal_t *ctx,
 				       const struct peer *peer,
-				       struct bitcoin_event *btc)
+				       struct btcnano_event *btc)
 {
 	if (fail(peer, FAIL_STEAL))
 		return NULL;
-	return bitcoin_tx("steal");
+	return btcnano_tx("steal");
 }
 
-const struct bitcoin_tx *bitcoin_commit(const tal_t *ctx, struct peer *peer)
+const struct btcnano_tx *btcnano_commit(const tal_t *ctx, struct peer *peer)
 {
 	peer->anchor_spent = true;
-	return bitcoin_tx("our commit");
+	return btcnano_tx("our commit");
 }
 
 /* Create a HTLC refund collection */
-const struct bitcoin_tx *bitcoin_htlc_timeout(const tal_t *ctx,
+const struct btcnano_tx *btcnano_htlc_timeout(const tal_t *ctx,
 					      const struct peer *peer,
 					      const struct htlc *htlc)
 {
@@ -907,7 +907,7 @@ const struct bitcoin_tx *bitcoin_htlc_timeout(const tal_t *ctx,
 }
 
 /* Create a HTLC collection */
-const struct bitcoin_tx *bitcoin_htlc_spend(const tal_t *ctx,
+const struct btcnano_tx *btcnano_htlc_spend(const tal_t *ctx,
 					    const struct peer *peer,
 					    const struct htlc *htlc)
 {
@@ -1195,7 +1195,7 @@ void peer_watch_anchor(struct peer *peer,
 	add_event(peer, otherspent);
 }
 
-void bitcoin_create_anchor(struct peer *peer, enum state_input done)
+void btcnano_create_anchor(struct peer *peer, enum state_input done)
 {
 	/* We assume this below */
 	assert(done == BITCOIN_ANCHOR_CREATED);
@@ -1206,7 +1206,7 @@ void bitcoin_create_anchor(struct peer *peer, enum state_input done)
 	add_event(peer, done);
 }
 
-void bitcoin_release_anchor(struct peer *peer, enum state_input done)
+void btcnano_release_anchor(struct peer *peer, enum state_input done)
 {
 	if (!peer->anchor)
 		report_trail(peer->trail, "Anchor not created?");
@@ -1230,29 +1230,29 @@ void peer_unwatch_anchor_depth(struct peer *peer,
 
 /* Wait for our commit to be spendable. */
 void peer_watch_delayed(struct peer *peer,
-			const struct bitcoin_tx *tx, enum state_input canspend)
+			const struct btcnano_tx *tx, enum state_input canspend)
 {
-	assert(bitcoin_tx_is(tx, "our commit"));
+	assert(btcnano_tx_is(tx, "our commit"));
 	add_event(peer, canspend);
 }
 
 /* Wait for commit to be very deeply buried (so we no longer need to
  * even watch) */
 void peer_watch_tx(struct peer *peer,
-		   const struct bitcoin_tx *tx,
+		   const struct btcnano_tx *tx,
 		   enum state_input done)
 {
 	/* We can have multiple steals or spendtheirs in flight, so
 	 * allow repeats for
 	 * BITCOIN_STEAL_DONE/BITCOIN_SPEND_THEIRS_DONE */
 	if (done == BITCOIN_STEAL_DONE) {
-		assert(bitcoin_tx_is(tx, "steal"));
+		assert(btcnano_tx_is(tx, "steal"));
 		add_event_(peer, done);
 	} else if (done == BITCOIN_SPEND_THEIRS_DONE) {
-		assert(bitcoin_tx_is(tx, "spend their commit"));
+		assert(btcnano_tx_is(tx, "spend their commit"));
 		add_event_(peer, done);
 	} else if (done == BITCOIN_SPEND_OURS_DONE) {
-		assert(bitcoin_tx_is(tx, "spend our commit"));
+		assert(btcnano_tx_is(tx, "spend our commit"));
 		add_event(peer, done);
 	} else
 		report_trail(peer->trail, "Unknown watch effect");
@@ -1277,7 +1277,7 @@ void peer_unwatch_close_timeout(struct peer *peer, enum state_input timedout)
 }
 
 bool peer_watch_our_htlc_outputs(struct peer *peer,
-				 const struct bitcoin_tx *tx,
+				 const struct btcnano_tx *tx,
 				 enum state_input tous_timeout,
 				 enum state_input tothem_spent,
 				 enum state_input tothem_timeout)
@@ -1309,7 +1309,7 @@ bool peer_watch_our_htlc_outputs(struct peer *peer,
 }
 
 bool peer_watch_their_htlc_outputs(struct peer *peer,
-				   const struct bitcoin_event *tx,
+				   const struct btcnano_event *tx,
 				   enum state_input tous_timeout,
 				   enum state_input tothem_spent,
 				   enum state_input tothem_timeout)
@@ -1399,7 +1399,7 @@ void peer_unwatch_all_htlc_outputs(struct peer *peer)
 }
 
 void peer_watch_htlc_spend(struct peer *peer,
-			   const struct bitcoin_tx *tx,
+			   const struct btcnano_tx *tx,
 			   const struct htlc *htlc,
 			   enum state_input done)
 {
@@ -1500,7 +1500,7 @@ void peer_htlc_declined(struct peer *peer, const Pkt *pkt)
 }
 
 const struct htlc *peer_tx_revealed_r_value(struct peer *peer,
-					    const struct bitcoin_event *btc)
+					    const struct btcnano_event *btc)
 {
 	const struct htlc *htlc = (struct htlc *)btc;
 	add_rval(peer, htlc->id);
@@ -1814,7 +1814,7 @@ static void try_input(const struct peer *peer,
 	struct trail t;
 	const char *problem;
 	Pkt *output;
-	const struct bitcoin_tx *broadcast;
+	const struct btcnano_tx *broadcast;
 	const tal_t *ctx = tal_tmpctx(NULL);
 	enum command_status cstatus;
 
@@ -2148,7 +2148,7 @@ static void run_peer(const struct peer *peer,
 	}
 
 	for (i = 0; i < peer->num_live_htlcs_to_them; i++) {
-		idata->btc = (struct bitcoin_event *)&copy.live_htlcs_to_them[i];
+		idata->btc = (struct btcnano_event *)&copy.live_htlcs_to_them[i];
 		try_input(&copy, BITCOIN_HTLC_TOTHEM_SPENT,
 			  idata, normalpath, errorpath,
 			  prev_trail, hist);
@@ -2229,7 +2229,7 @@ static enum state_input **map_inputs(void)
 		/* This adds to mapping_inputs every input_is() call */
 		if (!state_is_error(i)) {
 			struct peer dummy;
-			const struct bitcoin_tx *dummy_tx;
+			const struct btcnano_tx *dummy_tx;
 			Pkt *dummy_pkt;
 			memset(&dummy, 0, sizeof(dummy));
 			dummy.state = i;
