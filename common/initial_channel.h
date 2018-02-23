@@ -3,8 +3,8 @@
 #define LIGHTNING_COMMON_INITIAL_CHANNEL_H
 #include "config.h"
 
-#include <bitcoin/pubkey.h>
-#include <bitcoin/shadouble.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/shadouble.h>
 #include <ccan/short_types/short_types.h>
 #include <ccan/tal/tal.h>
 #include <common/channel_config.h>
@@ -28,7 +28,7 @@ struct channel_view {
 
 struct channel {
 	/* Funding txid and output. */
-	struct bitcoin_txid funding_txid;
+	struct btcnano_txid funding_txid;
 	unsigned int funding_txout;
 
 	/* Keys used to spend funding tx. */
@@ -142,7 +142,7 @@ static inline u16 to_self_delay(const struct channel *channel, enum side side)
  * Returns channel, or NULL if malformed.
  */
 struct channel *new_initial_channel(const tal_t *ctx,
-				    const struct bitcoin_txid *funding_txid,
+				    const struct btcnano_txid *funding_txid,
 				    unsigned int funding_txout,
 				    u64 funding_satoshis,
 				    u64 local_msatoshi,
@@ -166,7 +166,7 @@ struct channel *new_initial_channel(const tal_t *ctx,
  *
  * Returns the unsigned initial commitment transaction for @side.
  */
-struct bitcoin_tx *initial_channel_tx(const tal_t *ctx,
+struct btcnano_tx *initial_channel_tx(const tal_t *ctx,
 				      const u8 **wscript,
 				      const struct channel *channel,
 				      const struct pubkey *per_commitment_point,
