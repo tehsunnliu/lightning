@@ -5,7 +5,7 @@ closing_init,2001
 closing_init,,crypto_state,struct crypto_state
 closing_init,,gossip_index,u64
 closing_init,,seed,struct privkey
-closing_init,,funding_txid,struct bitcoin_txid
+closing_init,,funding_txid,struct btcnano_txid
 closing_init,,funding_txout,u16
 closing_init,,funding_satoshi,u64
 closing_init,,remote_fundingkey,struct pubkey
@@ -30,7 +30,7 @@ closing_init,,deprecated_api,bool
 # We received an offer, save signature.
 closing_received_signature,2002
 closing_received_signature,,signature,secp256k1_ecdsa_signature
-closing_received_signature,,tx,struct bitcoin_tx
+closing_received_signature,,tx,struct btcnano_tx
 
 closing_received_signature_reply,2102
 
