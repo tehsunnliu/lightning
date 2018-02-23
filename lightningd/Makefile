@@ -44,7 +44,7 @@ LIGHTNINGD_COMMON_OBJS :=			\
 	common/withdraw_tx.o
 
 LIGHTNINGD_SRC :=				\
-	lightningd/btcnano.c			\
+	lightningd/btcnanod.c			\
 	lightningd/build_utxos.c		\
 	lightningd/chaintopology.c		\
 	lightningd/gossip_control.c		\
