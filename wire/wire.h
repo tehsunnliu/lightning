@@ -1,12 +1,12 @@
 #ifndef LIGHTNING_WIRE_WIRE_H
 #define LIGHTNING_WIRE_WIRE_H
 #include "config.h"
-#include <bitcoin/block.h>
-#include <bitcoin/privkey.h>
-#include <bitcoin/pubkey.h>
-#include <bitcoin/shadouble.h>
-#include <bitcoin/short_channel_id.h>
-#include <bitcoin/signature.h>
+#include <btcnano/block.h>
+#include <btcnano/privkey.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/shadouble.h>
+#include <btcnano/short_channel_id.h>
+#include <btcnano/signature.h>
 #include <ccan/crypto/sha256/sha256.h>
 #include <ccan/short_types/short_types.h>
 #include <secp256k1_recovery.h>
@@ -16,13 +16,13 @@ struct channel_id {
 	u8 id[32];
 };
 
-struct bitcoin_blkid;
-struct bitcoin_txid;
+struct btcnano_blkid;
+struct btcnano_txid;
 struct preimage;
 struct ripemd160;
 
 void derive_channel_id(struct channel_id *channel_id,
-		       struct bitcoin_txid *txid, u16 txout);
+		       struct btcnano_txid *txid, u16 txout);
 
 /* Read the type; returns -1 if not long enough.  cursor is a tal ptr. */
 int fromwire_peektype(const u8 *cursor);
@@ -41,8 +41,8 @@ void towire_short_channel_id(u8 **pptr,
 			     const struct short_channel_id *short_channel_id);
 void towire_sha256(u8 **pptr, const struct sha256 *sha256);
 void towire_sha256_double(u8 **pptr, const struct sha256_double *sha256d);
-void towire_bitcoin_txid(u8 **pptr, const struct bitcoin_txid *txid);
-void towire_bitcoin_blkid(u8 **pptr, const struct bitcoin_blkid *blkid);
+void towire_btcnano_txid(u8 **pptr, const struct btcnano_txid *txid);
+void towire_btcnano_blkid(u8 **pptr, const struct btcnano_blkid *blkid);
 void towire_preimage(u8 **pptr, const struct preimage *preimage);
 void towire_ripemd160(u8 **pptr, const struct ripemd160 *ripemd);
 void towire_u8(u8 **pptr, u8 v);
@@ -54,7 +54,7 @@ void towire_bool(u8 **pptr, bool v);
 
 void towire_u8_array(u8 **pptr, const u8 *arr, size_t num);
 
-void towire_bitcoin_tx(u8 **pptr, const struct bitcoin_tx *tx);
+void towire_btcnano_tx(u8 **pptr, const struct btcnano_tx *tx);
 
 const u8 *fromwire(const u8 **cursor, size_t *max, void *copy, size_t n);
 u8 fromwire_u8(const u8 **cursor, size_t *max);
@@ -77,15 +77,15 @@ void fromwire_short_channel_id(const u8 **cursor, size_t *max,
 void fromwire_sha256(const u8 **cursor, size_t *max, struct sha256 *sha256);
 void fromwire_sha256_double(const u8 **cursor, size_t *max,
 			    struct sha256_double *sha256d);
-void fromwire_bitcoin_txid(const u8 **cursor, size_t *max,
-			   struct bitcoin_txid *txid);
-void fromwire_bitcoin_blkid(const u8 **cursor, size_t *max,
-			   struct bitcoin_blkid *blkid);
+void fromwire_btcnano_txid(const u8 **cursor, size_t *max,
+			   struct btcnano_txid *txid);
+void fromwire_btcnano_blkid(const u8 **cursor, size_t *max,
+			   struct btcnano_blkid *blkid);
 void fromwire_preimage(const u8 **cursor, size_t *max, struct preimage *preimage);
 void fromwire_ripemd160(const u8 **cursor, size_t *max, struct ripemd160 *ripemd);
 void fromwire_pad(const u8 **cursor, size_t *max, size_t num);
 
 void fromwire_u8_array(const u8 **cursor, size_t *max, u8 *arr, size_t num);
 
-void fromwire_bitcoin_tx(const u8 **cursor, size_t *max, struct bitcoin_tx *tx);
+void fromwire_btcnano_tx(const u8 **cursor, size_t *max, struct btcnano_tx *tx);
 #endif /* LIGHTNING_WIRE_WIRE_H */
