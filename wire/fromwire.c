@@ -1,8 +1,8 @@
 #include "wire.h"
-#include <bitcoin/preimage.h>
-#include <bitcoin/pubkey.h>
-#include <bitcoin/shadouble.h>
-#include <bitcoin/tx.h>
+#include <btcnano/preimage.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/shadouble.h>
+#include <btcnano/tx.h>
 #include <ccan/build_assert/build_assert.h>
 #include <ccan/endian/endian.h>
 #include <ccan/mem/mem.h>
@@ -174,14 +174,14 @@ void fromwire_sha256_double(const u8 **cursor, size_t *max,
 	fromwire_sha256(cursor, max, &sha256d->sha);
 }
 
-void fromwire_bitcoin_txid(const u8 **cursor, size_t *max,
-			   struct bitcoin_txid *txid)
+void fromwire_btcnano_txid(const u8 **cursor, size_t *max,
+			   struct btcnano_txid *txid)
 {
 	fromwire_sha256_double(cursor, max, &txid->shad);
 }
 
-void fromwire_bitcoin_blkid(const u8 **cursor, size_t *max,
-			    struct bitcoin_blkid *blkid)
+void fromwire_btcnano_blkid(const u8 **cursor, size_t *max,
+			    struct btcnano_blkid *blkid)
 {
 	fromwire_sha256_double(cursor, max, &blkid->shad);
 }
@@ -217,7 +217,7 @@ REGISTER_TYPE_TO_HEXSTR(channel_id);
  * (ie. `funding_output_index` alters the last two bytes).
  */
 void derive_channel_id(struct channel_id *channel_id,
-		       struct bitcoin_txid *txid, u16 txout)
+		       struct btcnano_txid *txid, u16 txout)
 {
 	BUILD_ASSERT(sizeof(*channel_id) == sizeof(*txid));
 	memcpy(channel_id, txid, sizeof(*channel_id));
@@ -225,7 +225,7 @@ void derive_channel_id(struct channel_id *channel_id,
 	channel_id->id[sizeof(*channel_id)-1] ^= txout;
 }
 
-void fromwire_bitcoin_tx(const u8 **cursor, size_t *max, struct bitcoin_tx *tx)
+void fromwire_btcnano_tx(const u8 **cursor, size_t *max, struct btcnano_tx *tx)
 {
-	pull_bitcoin_tx_onto(tx, cursor, max, tx);
+	pull_btcnano_tx_onto(tx, cursor, max, tx);
 }
