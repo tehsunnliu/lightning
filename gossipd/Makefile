@@ -65,7 +65,7 @@ $(LIGHTNINGD_GOSSIP_CONTROL_OBJS) : $(LIGHTNINGD_GOSSIP_CONTROL_HEADERS)
 
 gossipd-all: lightningd/lightning_gossipd $(LIGHTNINGD_GOSSIP_CLIENT_OBJS)
 
-lightningd/lightning_gossipd: $(LIGHTNINGD_GOSSIP_OBJS) $(GOSSIPD_COMMON_OBJS) $(BITCOIN_OBJS) $(WIRE_OBJS)
+lightningd/lightning_gossipd: $(LIGHTNINGD_GOSSIP_OBJS) $(GOSSIPD_COMMON_OBJS) $(BTCNANO_OBJS) $(WIRE_OBJS)
 
 gossipd/gen_gossip_wire.h: $(WIRE_GEN) gossipd/gossip_wire.csv
 	$(WIRE_GEN) --header $@ gossip_wire_type < gossipd/gossip_wire.csv > $@
