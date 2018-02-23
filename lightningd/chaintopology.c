@@ -1,6 +1,6 @@
-#include "bitcoin/block.h"
-#include "bitcoin/tx.h"
-#include "bitcoind.h"
+#include "btcnano/block.h"
+#include "btcnano/tx.h"
+#include "btcnanod.h"
 #include "chaintopology.h"
 #include "jsonrpc.h"
 #include "lightningd.h"
@@ -29,7 +29,7 @@ static void next_topology_timer(struct chain_topology *topo)
 
 /* FIXME: Remove tx from block when peer done. */
 static void add_tx_to_block(struct block *b,
-			    const struct bitcoin_tx *tx, const u32 txnum)
+			    const struct btcnano_tx *tx, const u32 txnum)
 {
 	size_t n = tal_count(b->txs);
 
@@ -40,7 +40,7 @@ static void add_tx_to_block(struct block *b,
 }
 
 static bool we_broadcast(const struct chain_topology *topo,
-			 const struct bitcoin_txid *txid)
+			 const struct btcnano_txid *txid)
 {
 	const struct outgoing_tx *otx;
 
@@ -58,8 +58,8 @@ static void filter_block_txs(struct chain_topology *topo, struct block *b)
 
 	/* Now we see if any of those txs are interesting. */
 	for (i = 0; i < tal_count(b->full_txs); i++) {
-		const struct bitcoin_tx *tx = b->full_txs[i];
-		struct bitcoin_txid txid;
+		const struct btcnano_tx *tx = b->full_txs[i];
+		struct btcnano_txid txid;
 		size_t j;
 
 		/* Tell them if it spends a txo we care about. */
@@ -75,13 +75,13 @@ static void filter_block_txs(struct chain_topology *topo, struct block *b)
 		}
 
 		satoshi_owned = 0;
-		if (txfilter_match(topo->bitcoind->ld->owned_txfilter, tx)) {
-			wallet_extract_owned_outputs(topo->bitcoind->ld->wallet,
+		if (txfilter_match(topo->btcnanod->ld->owned_txfilter, tx)) {
+			wallet_extract_owned_outputs(topo->btcnanod->ld->wallet,
 						     tx, &satoshi_owned);
 		}
 
 		/* We did spends first, in case that tells us to watch tx. */
-		bitcoin_txid(tx, &txid);
+		btcnano_txid(tx, &txid);
 		if (watching_txid(topo, &txid) || we_broadcast(topo, &txid) ||
 		    satoshi_owned != 0)
 			add_tx_to_block(b, tx, i);
@@ -89,14 +89,14 @@ static void filter_block_txs(struct chain_topology *topo, struct block *b)
 	b->full_txs = tal_free(b->full_txs);
 }
 
-static const struct bitcoin_tx *tx_in_block(const struct block *b,
-					    const struct bitcoin_txid *txid)
+static const struct btcnano_tx *tx_in_block(const struct block *b,
+					    const struct btcnano_txid *txid)
 {
 	size_t i, n = tal_count(b->txs);
 
 	for (i = 0; i < n; i++) {
-		struct bitcoin_txid this_txid;
-		bitcoin_txid(b->txs[i], &this_txid);
+		struct btcnano_txid this_txid;
+		btcnano_txid(b->txs[i], &this_txid);
 		if (structeq(&this_txid, txid))
 			return b->txs[i];
 	}
@@ -105,11 +105,11 @@ static const struct bitcoin_tx *tx_in_block(const struct block *b,
 
 /* FIXME: Use hash table. */
 static struct block *block_for_tx(const struct chain_topology *topo,
-				  const struct bitcoin_txid *txid,
-				  const struct bitcoin_tx **tx)
+				  const struct btcnano_txid *txid,
+				  const struct btcnano_tx **tx)
 {
 	struct block *b;
-	const struct bitcoin_tx *dummy_tx;
+	const struct btcnano_tx *dummy_tx;
 
 	if (!tx)
 		tx = &dummy_tx;
@@ -123,8 +123,8 @@ static struct block *block_for_tx(const struct chain_topology *topo,
 }
 
 size_t get_tx_depth(const struct chain_topology *topo,
-		    const struct bitcoin_txid *txid,
-		    const struct bitcoin_tx **tx)
+		    const struct btcnano_txid *txid,
+		    const struct btcnano_tx **tx)
 {
 	const struct block *b;
 
@@ -137,7 +137,7 @@ size_t get_tx_depth(const struct chain_topology *topo,
 struct txs_to_broadcast {
 	/* We just sent txs[cursor] */
 	size_t cursor;
-	/* These are hex encoded already, for bitcoind_sendrawtx */
+	/* These are hex encoded already, for btcnanod_sendrawtx */
 	const char **txs;
 
 	/* Command to complete when we're done, if and only if dev-broadcast triggered */
@@ -145,18 +145,18 @@ struct txs_to_broadcast {
 };
 
 /* We just sent the last entry in txs[].  Shrink and send the next last. */
-static void broadcast_remainder(struct bitcoind *bitcoind,
+static void broadcast_remainder(struct btcnanod *btcnanod,
 				int exitstatus, const char *msg,
 				struct txs_to_broadcast *txs)
 {
 	/* These are expected. */
 	if (strstr(msg, "txn-mempool-conflict")
 	    || strstr(msg, "transaction already in block chain"))
-		log_debug(bitcoind->log,
+		log_debug(btcnanod->log,
 			  "Expected error broadcasting tx %s: %s",
 			  txs->txs[txs->cursor], msg);
 	else if (exitstatus)
-		log_unusual(bitcoind->log, "Broadcasting tx %s: %i %s",
+		log_unusual(btcnanod->log, "Broadcasting tx %s: %i %s",
 			    txs->txs[txs->cursor], exitstatus, msg);
 
 	txs->cursor++;
@@ -168,11 +168,11 @@ static void broadcast_remainder(struct bitcoind *bitcoind,
 	}
 
 	/* Broadcast next one. */
-	bitcoind_sendrawtx(bitcoind, txs->txs[txs->cursor],
+	btcnanod_sendrawtx(btcnanod, txs->txs[txs->cursor],
 			   broadcast_remainder, txs);
 }
 
-/* FIXME: This is dumb.  We can group txs and avoid bothering bitcoind
+/* FIXME: This is dumb.  We can group txs and avoid bothering btcnanod
  * if any one tx is in the main chain. */
 static void rebroadcast_txs(struct chain_topology *topo, struct command *cmd)
 {
@@ -202,7 +202,7 @@ static void rebroadcast_txs(struct chain_topology *topo, struct command *cmd)
 
 	/* Let this do the dirty work. */
 	txs->cursor = (size_t)-1;
-	broadcast_remainder(topo->bitcoind, 0, "", txs);
+	broadcast_remainder(topo->btcnanod, 0, "", txs);
 }
 
 static void destroy_outgoing_tx(struct outgoing_tx *otx)
@@ -217,7 +217,7 @@ static void clear_otx_peer(struct peer *peer, struct outgoing_tx *otx)
 	otx->peer = NULL;
 }
 
-static void broadcast_done(struct bitcoind *bitcoind,
+static void broadcast_done(struct btcnanod *btcnanod,
 			   int exitstatus, const char *msg,
 			   struct outgoing_tx *otx)
 {
@@ -236,13 +236,13 @@ static void broadcast_done(struct bitcoind *bitcoind,
 	} else {
 		/* For continual rebroadcasting, until peer freed. */
 		tal_steal(otx->peer, otx);
-		list_add_tail(&bitcoind->ld->topology->outgoing_txs, &otx->list);
+		list_add_tail(&btcnanod->ld->topology->outgoing_txs, &otx->list);
 		tal_add_destructor(otx, destroy_outgoing_tx);
 	}
 }
 
 void broadcast_tx(struct chain_topology *topo,
-		  struct peer *peer, const struct bitcoin_tx *tx,
+		  struct peer *peer, const struct btcnano_tx *tx,
 		  void (*failed)(struct peer *peer,
 				 int exitstatus, const char *err))
 {
@@ -251,22 +251,22 @@ void broadcast_tx(struct chain_topology *topo,
 	const u8 *rawtx = linearize_tx(otx, tx);
 
 	otx->peer = peer;
-	bitcoin_txid(tx, &otx->txid);
+	btcnano_txid(tx, &otx->txid);
 	otx->hextx = tal_hex(otx, rawtx);
 	otx->failed = failed;
 	tal_free(rawtx);
 	tal_add_destructor2(peer, clear_otx_peer, otx);
 
 	log_add(topo->log, " (tx %s)",
-		type_to_string(ltmp, struct bitcoin_txid, &otx->txid));
+		type_to_string(ltmp, struct btcnano_txid, &otx->txid));
 
 #if DEVELOPER
 	if (topo->dev_no_broadcast) {
-		broadcast_done(topo->bitcoind, 0, "dev_no_broadcast", otx);
+		broadcast_done(topo->btcnanod, 0, "dev_no_broadcast", otx);
 		return;
 	}
 #endif
-	bitcoind_sendrawtx(topo->bitcoind, otx->hextx, broadcast_done, otx);
+	btcnanod_sendrawtx(topo->btcnanod, otx->hextx, broadcast_done, otx);
 }
 
 static const char *feerate_name(enum feerate feerate)
@@ -279,7 +279,7 @@ static const char *feerate_name(enum feerate feerate)
 static void next_updatefee_timer(struct chain_topology *topo);
 
 /* We sanitize feerates if necessary to put them in descending order. */
-static void update_feerates(struct bitcoind *bitcoind,
+static void update_feerates(struct btcnanod *btcnanod,
 			    const u32 *satoshi_per_kw,
 			    struct chain_topology *topo)
 {
@@ -310,7 +310,7 @@ static void update_feerates(struct bitcoind *bitcoind,
 	}
 
 	if (changed)
-		notify_feerate_change(bitcoind->ld);
+		notify_feerate_change(btcnanod->ld);
 
 	next_updatefee_timer(topo);
 }
@@ -324,7 +324,7 @@ static void start_fee_estimate(struct chain_topology *topo)
 	BUILD_ASSERT(ARRAY_SIZE(blocks) == NUM_FEERATES);
 
 	/* Once per new block head, update fee estimates. */
-	bitcoind_estimate_fees(topo->bitcoind, blocks, estmodes, NUM_FEERATES,
+	btcnanod_estimate_fees(topo->btcnanod, blocks, estmodes, NUM_FEERATES,
 			       update_feerates, topo);
 }
 
@@ -340,7 +340,7 @@ static void updates_complete(struct chain_topology *topo)
 {
 	if (topo->tip != topo->prev_tip) {
 		/* Tell lightningd about new block. */
-		notify_new_block(topo->bitcoind->ld, topo->tip->height);
+		notify_new_block(topo->btcnanod->ld, topo->tip->height);
 
 		/* Tell watch code to re-evaluate all txs. */
 		watch_topology_changed(topo);
@@ -370,7 +370,7 @@ static void add_tip(struct chain_topology *topo, struct block *b)
 }
 
 static struct block *new_block(struct chain_topology *topo,
-			       struct bitcoin_block *blk,
+			       struct btcnano_block *blk,
 			       unsigned int height)
 {
 	struct block *b = tal(topo, struct block);
@@ -378,7 +378,7 @@ static struct block *new_block(struct chain_topology *topo,
 	sha256_double(&b->blkid.shad, &blk->hdr, sizeof(blk->hdr));
 	log_debug(topo->log, "Adding block %u: %s",
 		  height,
-		  type_to_string(ltmp, struct bitcoin_blkid, &b->blkid));
+		  type_to_string(ltmp, struct btcnano_blkid, &b->blkid));
 	assert(!block_map_get(&topo->block_map, &b->blkid));
 	b->next = NULL;
 	b->prev = NULL;
@@ -387,7 +387,7 @@ static struct block *new_block(struct chain_topology *topo,
 
 	b->hdr = blk->hdr;
 
-	b->txs = tal_arr(b, const struct bitcoin_tx *, 0);
+	b->txs = tal_arr(b, const struct btcnano_tx *, 0);
 	b->txnums = tal_arr(b, u32, 0);
 	b->full_txs = tal_steal(b, blk->tx);
 
@@ -404,7 +404,7 @@ static void remove_tip(struct chain_topology *topo)
 	if (!topo->tip)
 		fatal("Initial block %u (%s) reorganized out!",
 		      b->height,
-		      type_to_string(ltmp, struct bitcoin_blkid, &b->blkid));
+		      type_to_string(ltmp, struct btcnano_blkid, &b->blkid));
 
 	/* Notify that txs are kicked out. */
 	for (i = 0; i < n; i++)
@@ -413,8 +413,8 @@ static void remove_tip(struct chain_topology *topo)
 	tal_free(b);
 }
 
-static void have_new_block(struct bitcoind *bitcoind,
-			   struct bitcoin_block *blk,
+static void have_new_block(struct btcnanod *btcnanod,
+			   struct btcnano_block *blk,
 			   struct chain_topology *topo)
 {
 	/* Unexpected predecessor?  Free predecessor, refetch it. */
@@ -427,8 +427,8 @@ static void have_new_block(struct bitcoind *bitcoind,
 	try_extend_tip(topo);
 }
 
-static void get_new_block(struct bitcoind *bitcoind,
-			  const struct bitcoin_blkid *blkid,
+static void get_new_block(struct btcnanod *btcnanod,
+			  const struct btcnano_blkid *blkid,
 			  struct chain_topology *topo)
 {
 	if (!blkid) {
@@ -436,17 +436,17 @@ static void get_new_block(struct bitcoind *bitcoind,
 		updates_complete(topo);
 		return;
 	}
-	bitcoind_getrawblock(bitcoind, blkid, have_new_block, topo);
+	btcnanod_getrawblock(btcnanod, blkid, have_new_block, topo);
 }
 
 static void try_extend_tip(struct chain_topology *topo)
 {
-	bitcoind_getblockhash(topo->bitcoind, topo->tip->height + 1,
+	btcnanod_getblockhash(topo->btcnanod, topo->tip->height + 1,
 			      get_new_block, topo);
 }
 
-static void init_topo(struct bitcoind *bitcoind,
-		      struct bitcoin_block *blk,
+static void init_topo(struct btcnanod *btcnanod,
+		      struct btcnano_block *blk,
 		      struct chain_topology *topo)
 {
 	topo->root = new_block(topo, blk, topo->first_blocknum);
@@ -456,14 +456,14 @@ static void init_topo(struct bitcoind *bitcoind,
 	io_break(topo);
 }
 
-static void get_init_block(struct bitcoind *bitcoind,
-			   const struct bitcoin_blkid *blkid,
+static void get_init_block(struct btcnanod *btcnanod,
+			   const struct btcnano_blkid *blkid,
 			   struct chain_topology *topo)
 {
-	bitcoind_getrawblock(bitcoind, blkid, init_topo, topo);
+	btcnanod_getrawblock(btcnanod, blkid, init_topo, topo);
 }
 
-static void get_init_blockhash(struct bitcoind *bitcoind, u32 blockcount,
+static void get_init_blockhash(struct btcnanod *btcnanod, u32 blockcount,
 			       struct chain_topology *topo)
 {
 	/* This happens if first_blocknum is UINTMAX-1 */
@@ -478,7 +478,7 @@ static void get_init_blockhash(struct bitcoind *bitcoind, u32 blockcount,
 		topo->first_blocknum -= 100;
 
 	/* Get up to speed with topology. */
-	bitcoind_getblockhash(bitcoind, topo->first_blocknum,
+	btcnanod_getblockhash(btcnanod, topo->first_blocknum,
 			      get_init_block, topo);
 }
 
@@ -527,7 +527,7 @@ u32 get_feerate(const struct chain_topology *topo, enum feerate feerate)
 }
 
 struct txlocator *locate_tx(const void *ctx, const struct chain_topology *topo,
-			    const struct bitcoin_txid *txid)
+			    const struct btcnano_txid *txid)
 {
 	struct block *block = block_for_tx(topo, txid, NULL);
 	if (block == NULL) {
@@ -538,8 +538,8 @@ struct txlocator *locate_tx(const void *ctx, const struct chain_topology *topo,
 	loc->blkheight = block->height;
 	size_t i, n = tal_count(block->txs);
 	for (i = 0; i < n; i++) {
-		struct bitcoin_txid this_txid;
-		bitcoin_txid(block->txs[i], &this_txid);
+		struct btcnano_txid this_txid;
+		btcnano_txid(block->txs[i], &this_txid);
 		if (structeq(&this_txid, txid)){
 			loc->index = block->txnums[i];
 			return loc;
@@ -700,7 +700,7 @@ struct chain_topology *new_topology(struct lightningd *ld, struct log *log)
 	topo->log = log;
 	topo->default_fee_rate = 40000;
 	topo->override_fee_rate = NULL;
-	topo->bitcoind = new_bitcoind(topo, ld, log);
+	topo->btcnanod = new_btcnanod(topo, ld, log);
 #if DEVELOPER
 	topo->dev_no_broadcast = false;
 #endif
@@ -719,10 +719,10 @@ void setup_topology(struct chain_topology *topo,
 	 * get notifications on txs in that block). */
 	topo->first_blocknum = first_peer_block - 1;
 
-	/* Make sure bitcoind is started, and ready */
-	wait_for_bitcoind(topo->bitcoind);
+	/* Make sure btcnanod is started, and ready */
+	wait_for_btcnanod(topo->btcnanod);
 
-	bitcoind_getblockcount(topo->bitcoind, get_init_blockhash, topo);
+	btcnanod_getblockcount(topo->btcnanod, get_init_blockhash, topo);
 
 	tal_add_destructor(topo, destroy_outgoing_txs);
 

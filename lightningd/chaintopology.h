@@ -1,8 +1,8 @@
 #ifndef LIGHTNING_LIGHTNINGD_CHAINTOPOLOGY_H
 #define LIGHTNING_LIGHTNINGD_CHAINTOPOLOGY_H
 #include "config.h"
-#include <bitcoin/block.h>
-#include <bitcoin/tx.h>
+#include <btcnano/block.h>
+#include <btcnano/tx.h>
 #include <ccan/list/list.h>
 #include <ccan/short_types/short_types.h>
 #include <ccan/structeq/structeq.h>
@@ -11,8 +11,8 @@
 #include <lightningd/watch.h>
 #include <stddef.h>
 
-struct bitcoin_tx;
-struct bitcoind;
+struct btcnano_tx;
+struct btcnanod;
 struct command;
 struct lightningd;
 struct peer;
@@ -30,7 +30,7 @@ struct outgoing_tx {
 	struct list_node list;
 	struct peer *peer;
 	const char *hextx;
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 	void (*failed)(struct peer *peer, int exitstatus, const char *err);
 };
 
@@ -38,7 +38,7 @@ struct block {
 	int height;
 
 	/* Actual header. */
-	struct bitcoin_block_hdr hdr;
+	struct btcnano_block_hdr hdr;
 
 	/* Previous block (if any). */
 	struct block *prev;
@@ -47,25 +47,25 @@ struct block {
 	struct block *next;
 
 	/* Key for hash table */
-	struct bitcoin_blkid blkid;
+	struct btcnano_blkid blkid;
 
 	/* Transactions in this block we care about */
-	const struct bitcoin_tx **txs;
+	const struct btcnano_tx **txs;
 
 	/* And their associated index in the block */
 	u32 *txnums;
 
 	/* Full copy of txs (trimmed to txs list in connect_block) */
-	struct bitcoin_tx **full_txs;
+	struct btcnano_tx **full_txs;
 };
 
 /* Hash blocks by sha */
-static inline const struct bitcoin_blkid *keyof_block_map(const struct block *b)
+static inline const struct btcnano_blkid *keyof_block_map(const struct block *b)
 {
 	return &b->blkid;
 }
 
-static inline size_t hash_sha(const struct bitcoin_blkid *key)
+static inline size_t hash_sha(const struct btcnano_blkid *key)
 {
 	size_t ret;
 
@@ -73,7 +73,7 @@ static inline size_t hash_sha(const struct bitcoin_blkid *key)
 	return ret;
 }
 
-static inline bool block_eq(const struct block *b, const struct bitcoin_blkid *key)
+static inline bool block_eq(const struct block *b, const struct btcnano_blkid *key)
 {
 	return structeq(&b->blkid, key);
 }
@@ -95,8 +95,8 @@ struct chain_topology {
 	/* How often to poll. */
 	struct timerel poll_time;
 
-	/* The bitcoind. */
-	struct bitcoind *bitcoind;
+	/* The btcnanod. */
+	struct btcnanod *btcnanod;
 
 	/* The btcnanod. */
 	struct btcnanod *btcnanod;
@@ -136,8 +136,8 @@ struct txlocator {
 /* This is the number of blocks which would have to be mined to invalidate
  * the tx (optional tx is filled in if return is non-zero). */
 size_t get_tx_depth(const struct chain_topology *topo,
-		    const struct bitcoin_txid *txid,
-		    const struct bitcoin_tx **tx);
+		    const struct btcnano_txid *txid,
+		    const struct btcnano_tx **tx);
 
 /* Get highest block number. */
 u32 get_block_height(const struct chain_topology *topo);
@@ -148,7 +148,7 @@ u32 get_feerate(const struct chain_topology *topo, enum feerate feerate);
 /* Broadcast a single tx, and rebroadcast as reqd (copies tx).
  * If failed is non-NULL, call that and don't rebroadcast. */
 void broadcast_tx(struct chain_topology *topo,
-		  struct peer *peer, const struct bitcoin_tx *tx,
+		  struct peer *peer, const struct btcnano_tx *tx,
 		  void (*failed)(struct peer *peer,
 				 int exitstatus,
 				 const char *err));
@@ -160,7 +160,7 @@ void setup_topology(struct chain_topology *topology,
 
 void begin_topology(struct chain_topology *topo);
 
-struct txlocator *locate_tx(const void *ctx, const struct chain_topology *topo, const struct bitcoin_txid *txid);
+struct txlocator *locate_tx(const void *ctx, const struct chain_topology *topo, const struct btcnano_txid *txid);
 
 void notify_new_block(struct lightningd *ld, unsigned int height);
 void notify_feerate_change(struct lightningd *ld);
