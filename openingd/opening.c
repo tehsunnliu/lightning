@@ -1,7 +1,7 @@
-#include <bitcoin/block.h>
-#include <bitcoin/chainparams.h>
-#include <bitcoin/privkey.h>
-#include <bitcoin/script.h>
+#include <btcnano/block.h>
+#include <btcnano/chainparams.h>
+#include <btcnano/privkey.h>
+#include <btcnano/script.h>
 #include <ccan/breakpoint/breakpoint.h>
 #include <ccan/fdpass/fdpass.h>
 #include <ccan/structeq/structeq.h>
@@ -46,7 +46,7 @@ struct state {
 	/* Funding and feerate: set by opening peer. */
 	u64 funding_satoshis, push_msat;
 	u32 feerate_per_kw;
-	struct bitcoin_txid funding_txid;
+	struct btcnano_txid funding_txid;
 	u16 funding_txout;
 
 	/* Secret keys and basepoint secrets. */
@@ -239,13 +239,13 @@ static u8 *funder_channel(struct state *state,
 {
 	struct channel_id id_in;
 	u8 *msg;
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	struct basepoints theirs;
 	struct pubkey their_funding_pubkey, changekey;
 	secp256k1_ecdsa_signature sig;
 	u32 minimum_depth;
 	const u8 *wscript;
-	struct bitcoin_tx *funding;
+	struct btcnano_tx *funding;
 	const struct utxo **utxomap;
 
 	set_reserve(&state->localconf.channel_reserve_satoshis,
@@ -359,7 +359,7 @@ static u8 *funder_channel(struct state *state,
 			     &their_funding_pubkey,
 			     change_satoshis, &changekey,
 			     bip32_base);
-	bitcoin_txid(funding, &state->funding_txid);
+	btcnano_txid(funding, &state->funding_txid);
 
 	state->channel = new_initial_channel(state,
 					     &state->funding_txid,
@@ -394,7 +394,7 @@ static u8 *funder_channel(struct state *state,
 		      our_funding_pubkey, &sig);
 	status_trace("signature %s on tx %s using key %s",
 		     type_to_string(trc, secp256k1_ecdsa_signature, &sig),
-		     type_to_string(trc, struct bitcoin_tx, tx),
+		     type_to_string(trc, struct btcnano_tx, tx),
 		     type_to_string(trc, struct pubkey, our_funding_pubkey));
 
 	msg = towire_funding_created(state, &state->channel_id,
@@ -449,7 +449,7 @@ static u8 *funder_channel(struct state *state,
 			    "Bad signature %s on tx %s using key %s",
 			    type_to_string(trc, secp256k1_ecdsa_signature,
 					   &sig),
-			    type_to_string(trc, struct bitcoin_tx, tx),
+			    type_to_string(trc, struct btcnano_tx, tx),
 			    type_to_string(trc, struct pubkey,
 					   &their_funding_pubkey));
 	}
@@ -487,8 +487,8 @@ static u8 *fundee_channel(struct state *state,
 	struct basepoints theirs;
 	struct pubkey their_funding_pubkey;
 	secp256k1_ecdsa_signature theirsig, sig;
-	struct bitcoin_tx *their_commit, *our_commit;
-	struct bitcoin_blkid chain_hash;
+	struct btcnano_tx *their_commit, *our_commit;
+	struct btcnano_blkid chain_hash;
 	u8 *msg;
 	const u8 *wscript;
 	u8 channel_flags;
@@ -533,7 +533,7 @@ static u8 *fundee_channel(struct state *state,
 		negotiation_failed(state, true,
 				   "Unknown chain-hash %s",
 				   type_to_string(peer_msg,
-						  struct bitcoin_blkid,
+						  struct btcnano_blkid,
 						  &chain_hash));
 	}
 
@@ -645,7 +645,7 @@ static u8 *fundee_channel(struct state *state,
 			    "Bad signature %s on tx %s using key %s",
 			    type_to_string(trc, secp256k1_ecdsa_signature,
 					   &theirsig),
-			    type_to_string(trc, struct bitcoin_tx, their_commit),
+			    type_to_string(trc, struct btcnano_tx, their_commit),
 			    type_to_string(trc, struct pubkey,
 					   &their_funding_pubkey));
 	}
