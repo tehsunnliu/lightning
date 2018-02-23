@@ -2,8 +2,8 @@
 #include <stdbool.h>
 #include <string.h>
 
-static bool input_better(const struct bitcoin_tx_input *a,
-			 const struct bitcoin_tx_input *b)
+static bool input_better(const struct btcnano_tx_input *a,
+			 const struct btcnano_tx_input *b)
 {
 	int cmp;
 
@@ -22,7 +22,7 @@ static bool input_better(const struct bitcoin_tx_input *a,
 	return a->sequence_number < b->sequence_number;
 }
 
-static size_t find_best_in(struct bitcoin_tx_input *inputs, size_t num)
+static size_t find_best_in(struct btcnano_tx_input *inputs, size_t num)
 {
 	size_t i, best = 0;
 
@@ -33,11 +33,11 @@ static size_t find_best_in(struct bitcoin_tx_input *inputs, size_t num)
 	return best;
 }
 
-static void swap_inputs(struct bitcoin_tx_input *inputs,
+static void swap_inputs(struct btcnano_tx_input *inputs,
 			const void **map,
 			size_t i1, size_t i2)
 {
-	struct bitcoin_tx_input tmpinput;
+	struct btcnano_tx_input tmpinput;
 	const void *tmp;
 
 	if (i1 == i2)
@@ -54,7 +54,7 @@ static void swap_inputs(struct bitcoin_tx_input *inputs,
 	}
 }
 
-void permute_inputs(struct bitcoin_tx_input *inputs, size_t num_inputs,
+void permute_inputs(struct btcnano_tx_input *inputs, size_t num_inputs,
 		    const void **map)
 {
 	size_t i;
@@ -71,11 +71,11 @@ void permute_inputs(struct bitcoin_tx_input *inputs, size_t num_inputs,
 	}
 }
 
-static void swap_outputs(struct bitcoin_tx_output *outputs,
+static void swap_outputs(struct btcnano_tx_output *outputs,
 			 const void **map,
 			 size_t i1, size_t i2)
 {
-	struct bitcoin_tx_output tmpoutput;
+	struct btcnano_tx_output tmpoutput;
 	const void *tmp;
 
 	if (i1 == i2)
@@ -92,8 +92,8 @@ static void swap_outputs(struct bitcoin_tx_output *outputs,
 	}
 }
 
-static bool output_better(const struct bitcoin_tx_output *a,
-			  const struct bitcoin_tx_output *b)
+static bool output_better(const struct btcnano_tx_output *a,
+			  const struct btcnano_tx_output *b)
 {
 	size_t len;
 	int ret;
@@ -114,7 +114,7 @@ static bool output_better(const struct bitcoin_tx_output *a,
 	return tal_len(a->script) < tal_len(b->script);
 }
 
-static size_t find_best_out(struct bitcoin_tx_output *outputs, size_t num)
+static size_t find_best_out(struct btcnano_tx_output *outputs, size_t num)
 {
 	size_t i, best = 0;
 
@@ -125,7 +125,7 @@ static size_t find_best_out(struct bitcoin_tx_output *outputs, size_t num)
 	return best;
 }
 
-void permute_outputs(struct bitcoin_tx_output *outputs, size_t num_outputs,
+void permute_outputs(struct btcnano_tx_output *outputs, size_t num_outputs,
 		     const void **map)
 {
 	size_t i;
