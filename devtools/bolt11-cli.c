@@ -1,7 +1,7 @@
-#include <bitcoin/address.h>
-#include <bitcoin/base58.h>
-#include <bitcoin/chainparams.h>
-#include <bitcoin/script.h>
+#include <btcnano/address.h>
+#include <btcnano/base58.h>
+#include <btcnano/chainparams.h>
+#include <btcnano/script.h>
 #include <ccan/err/err.h>
 #include <ccan/opt/opt.h>
 #include <ccan/read_write_all/read_write_all.h>
@@ -112,14 +112,14 @@ int main(int argc, char *argv[])
 				  sizeof(*b11->description_hash)));
 
         if (tal_len(b11->fallback)) {
-                struct bitcoin_address pkh;
+                struct btcnano_address pkh;
                 struct ripemd160 sh;
                 struct sha256 wsh;
 
 		printf("fallback: %s\n", tal_hex(ctx, b11->fallback));
                 if (is_p2pkh(b11->fallback, &pkh)) {
 			printf("fallback-P2PKH: %s\n",
-			       bitcoin_to_base58(ctx, b11->chain->testnet,
+			       btcnano_to_base58(ctx, b11->chain->testnet,
 						 &pkh));
                 } else if (is_p2sh(b11->fallback, &sh)) {
 			printf("fallback-P2SH: %s\n",

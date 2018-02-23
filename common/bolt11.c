@@ -1,7 +1,7 @@
-#include <bitcoin/address.h>
-#include <bitcoin/base58.h>
-#include <bitcoin/chainparams.h>
-#include <bitcoin/script.h>
+#include <btcnano/address.h>
+#include <btcnano/base58.h>
+#include <btcnano/chainparams.h>
+#include <btcnano/script.h>
 #include <ccan/array_size/array_size.h>
 #include <ccan/cast/cast.h>
 #include <ccan/endian/endian.h>
@@ -23,7 +23,7 @@
 #include <wire/wire.h>
 #include <wire/wire_sync.h>
 
-/* 1000 * 10^8 millisatoshi == 1 bitcoin */
+/* 1000 * 10^8 millisatoshi == 1 btcnano */
 #define MSAT_PER_BTC 100000000000ULL
 
 struct multiplier {
@@ -308,7 +308,7 @@ static char *decode_n(struct bolt11 *b11,
 /* BOLT #11:
  *
  * `f` (9): `data_length` variable, depending on version. Fallback on-chain
- * address: for bitcoin, this starts with a 5 bit `version`; a witness program
+ * address: for btcnano, this starts with a 5 bit `version`; a witness program
  * or P2PKH or P2SH address.
  */
 static char *decode_f(struct bolt11 *b11,
@@ -328,12 +328,12 @@ static char *decode_f(struct bolt11 *b11,
 
         /* BOLT #11:
          *
-         * For bitcoin payments, a writer MUST set an `f` field to a
+         * For btcnano payments, a writer MUST set an `f` field to a
          * valid witness version and program, or `17` followed by a
          * public key hash, or `18` followed by a script hash. */
         if (version == 17) {
                 /* Pay to pubkey hash (P2PKH) */
-                struct bitcoin_address pkhash;
+                struct btcnano_address pkhash;
                 if (num_u8(data_length) != sizeof(pkhash))
                         return tal_fmt(b11, "f: pkhash length %zu",
                                        data_length);
@@ -559,7 +559,7 @@ struct bolt11 *bolt11_decode(const tal_t *ctx, const char *str,
          *
          * 1. `timestamp`: seconds-since-1970 (35 bits, big-endian)
          * 1. Zero or more tagged parts.
-         * 1. `signature`: bitcoin-style signature of above. (520 bits)
+         * 1. `signature`: btcnano-style signature of above. (520 bits)
          */
         if (!pull_uint(&hu5, &data, &data_len, &b11->timestamp, 35))
                 return decode_fail(b11, fail, "Can't get 35-bit timestamp");
@@ -812,13 +812,13 @@ static void encode_c(u5 **data, u16 min_final_cltv_expiry)
 
 static void encode_f(u5 **data, const u8 *fallback)
 {
-        struct bitcoin_address pkh;
+        struct btcnano_address pkh;
         struct ripemd160 sh;
         struct sha256 wsh;
 
         /* BOLT #11:
          *
-         * For bitcoin payments, a writer MUST set an `f` field to a valid
+         * For btcnano payments, a writer MUST set an `f` field to a valid
          * witness version and program, or `17` followed by a public key hash,
          * or `18` followed by a script hash.
          */
@@ -930,7 +930,7 @@ char *bolt11_encode_(const tal_t *ctx,
          *
          * 1. `timestamp`: seconds-since-1970 (35 bits, big-endian)
          * 1. Zero or more tagged parts.
-         * 1. `signature`: bitcoin-style signature of above. (520 bits)
+         * 1. `signature`: btcnano-style signature of above. (520 bits)
          */
         push_varlen_uint(&data, b11->timestamp, 35);
 
