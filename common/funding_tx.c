@@ -1,7 +1,7 @@
 #include "funding_tx.h"
-#include <bitcoin/pubkey.h>
-#include <bitcoin/script.h>
-#include <bitcoin/tx.h>
+#include <btcnano/pubkey.h>
+#include <btcnano/script.h>
+#include <btcnano/tx.h>
 #include <ccan/ptrint/ptrint.h>
 #include <common/key_derive.h>
 #include <common/permute_tx.h>
@@ -11,7 +11,7 @@
 #define SUPERVERBOSE(...)
 #endif
 
-struct bitcoin_tx *funding_tx(const tal_t *ctx,
+struct btcnano_tx *funding_tx(const tal_t *ctx,
 			      u16 *outnum,
 			      const struct utxo **utxomap,
 			      u64 funding_satoshis,
@@ -21,7 +21,7 @@ struct bitcoin_tx *funding_tx(const tal_t *ctx,
 			      const struct pubkey *changekey,
 			      const struct ext_key *bip32_base)
 {
-	struct bitcoin_tx *tx = bitcoin_tx(ctx, tal_count(utxomap),
+	struct btcnano_tx *tx = btcnano_tx(ctx, tal_count(utxomap),
 					   change_satoshis ? 2 : 1);
 	u8 *wscript;
 	size_t i;
@@ -35,12 +35,12 @@ struct bitcoin_tx *funding_tx(const tal_t *ctx,
 
 			bip32_pubkey(bip32_base, &key, utxomap[i]->keyindex);
 			tx->input[i].script
-				= bitcoin_scriptsig_p2sh_p2wpkh(tx, &key);
+				= btcnano_scriptsig_p2sh_p2wpkh(tx, &key);
 		}
 	}
 
 	tx->output[0].amount = funding_satoshis;
-	wscript = bitcoin_redeem_2of2(tx, local_fundingkey, remote_fundingkey);
+	wscript = btcnano_redeem_2of2(tx, local_fundingkey, remote_fundingkey);
 	SUPERVERBOSE("# funding witness script = %s\n",
 		     tal_hex(wscript, wscript));
 	tx->output[0].script = scriptpubkey_p2wsh(tx, wscript);

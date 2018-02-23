@@ -4,7 +4,7 @@
 #include <ccan/short_types/short_types.h>
 #include <ccan/tal/tal.h>
 
-struct bitcoin_tx;
+struct btcnano_tx;
 struct ext_key;
 struct privkey;
 struct pubkey;
@@ -31,7 +31,7 @@ struct utxo;
  * have to be removed for signing anyway).  The funding transaction is
  * a special case because of the P2SH inputs.
  */
-struct bitcoin_tx *funding_tx(const tal_t *ctx,
+struct btcnano_tx *funding_tx(const tal_t *ctx,
 			      u16 *outnum,
 			      const struct utxo **utxomap,
 			      u64 funding_satoshis,
