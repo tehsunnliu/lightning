@@ -1,19 +1,19 @@
-#include "bitcoin/script.h"
-#include "bitcoin/tx.h"
+#include "btcnano/script.h"
+#include "btcnano/tx.h"
 #include "close_tx.h"
 #include "permute_tx.h"
 #include <assert.h>
 
-struct bitcoin_tx *create_close_tx(const tal_t *ctx,
+struct btcnano_tx *create_close_tx(const tal_t *ctx,
 				   const u8 *our_script,
 				   const u8 *their_script,
-				   const struct bitcoin_txid *anchor_txid,
+				   const struct btcnano_txid *anchor_txid,
 				   unsigned int anchor_index,
 				   u64 anchor_satoshis,
 				   uint64_t to_us, uint64_t to_them,
 				   uint64_t dust_limit)
 {
-	struct bitcoin_tx *tx;
+	struct btcnano_tx *tx;
 	size_t num_outputs = 0;
 
 	assert(to_us + to_them <= anchor_satoshis);
@@ -29,7 +29,7 @@ struct bitcoin_tx *create_close_tx(const tal_t *ctx,
 	 * * txin count: 1
 	 */
 	/* Now create close tx: one input, two outputs. */
-	tx = bitcoin_tx(ctx, 1, 2);
+	tx = btcnano_tx(ctx, 1, 2);
 
 	/* Our input spends the anchor tx output. */
 	tx->input[0].txid = *anchor_txid;
