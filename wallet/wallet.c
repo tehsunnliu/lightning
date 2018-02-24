@@ -179,7 +179,7 @@ static const struct utxo **wallet_select(const tal_t *ctx, struct wallet *w,
 
 	/* Change output will be P2WPKH */
 	if (may_have_change)
-		weight += (8 + 1 + BITCOIN_SCRIPTPUBKEY_P2WPKH_LEN) * 4;
+		weight += (8 + 1 + BTCNANO_SCRIPTPUBKEY_P2WPKH_LEN) * 4;
 
 	*fee_estimate = 0;
 	*satoshi_in = 0;
