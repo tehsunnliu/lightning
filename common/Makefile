@@ -48,8 +48,8 @@ COMMON_HEADERS_GEN := common/gen_htlc_state_names.h
 COMMON_HEADERS := $(COMMON_HEADERS_GEN) $(COMMON_HEADERS_NOGEN)
 COMMON_OBJS := $(COMMON_SRC:.c=.o)
 
-# Common objects depends on bitcoin/ external/ and ccan
-$(COMMON_OBJS): $(CCAN_HEADERS) $(BITCOIN_HEADERS) $(EXTERNAL_HEADERS) $(COMMON_HEADERS_GEN)
+# Common objects depends on btcnano/ external/ and ccan
+$(COMMON_OBJS): $(CCAN_HEADERS) $(BTCNANO_HEADERS) $(EXTERNAL_HEADERS) $(COMMON_HEADERS_GEN)
 
 ALL_GEN_HEADERS += $(COMMON_HEADERS_GEN)
 ALL_OBJS += $(COMMON_OBJS)
