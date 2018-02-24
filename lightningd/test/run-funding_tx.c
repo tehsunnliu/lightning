@@ -1,8 +1,8 @@
 #include <assert.h>
-#include <bitcoin/address.h>
-#include <bitcoin/base58.h>
-#include <bitcoin/privkey.h>
-#include <bitcoin/pubkey.h>
+#include <btcnano/address.h>
+#include <btcnano/base58.h>
+#include <btcnano/privkey.h>
+#include <btcnano/pubkey.h>
 #include <ccan/str/hex/hex.h>
 #include <common/type_to_string.h>
 #include <common/utils.h>
@@ -42,7 +42,7 @@ static struct privkey privkey_from_hex(const char *hex)
 int main(void)
 {
 	tal_t *tmpctx = tal_tmpctx(NULL);
-	struct bitcoin_tx *input, *funding;
+	struct btcnano_tx *input, *funding;
 	u64 fee;
 	struct pubkey local_funding_pubkey, remote_funding_pubkey;
 	struct privkey input_privkey;
@@ -54,7 +54,7 @@ int main(void)
 	u16 funding_outnum;
 	u8 *subscript;
 	secp256k1_ecdsa_signature sig;
-	struct bitcoin_address addr;
+	struct btcnano_address addr;
 
 	secp256k1_ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY
 						 | SECP256K1_CONTEXT_SIGN);
@@ -63,7 +63,7 @@ int main(void)
 	 *
 	 * Block 1 coinbase transaction: 01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff03510101ffffffff0100f2052a010000001976a9143ca33c2e4446f4a305f23c80df8ad1afdcf652f988ac00000000
 	 */
-	input = bitcoin_tx_from_hex(tmpctx,
+	input = btcnano_tx_from_hex(tmpctx,
 				    "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff03510101ffffffff0100f2052a010000001976a9143ca33c2e4446f4a305f23c80df8ad1afdcf652f988ac00000000",
 				    strlen("01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff03510101ffffffff0100f2052a010000001976a9143ca33c2e4446f4a305f23c80df8ad1afdcf652f988ac00000000"));
 	assert(input);
@@ -95,7 +95,7 @@ int main(void)
 				&remote_funding_pubkey))
 		abort();
 
-	bitcoin_txid(input, &utxo.txid);
+	btcnano_txid(input, &utxo.txid);
 	utxo.outnum = 0;
 	utxo.amount = 5000000000;
 	utxo.is_p2sh = false;
@@ -127,7 +127,7 @@ int main(void)
 	sign_tx_input(funding, 0, subscript, NULL, &input_privkey, &inputkey,
 		      &sig);
 
-	funding->input[0].script = bitcoin_redeem_p2pkh(funding, &inputkey,
+	funding->input[0].script = btcnano_redeem_p2pkh(funding, &inputkey,
 							&sig);
 	printf("funding tx: %s\n",
 	       tal_hex(tmpctx, linearize_tx(tmpctx, funding)));
