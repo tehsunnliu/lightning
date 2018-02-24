@@ -19,9 +19,9 @@ devtools/gen_print_wire.h: $(WIRE_GEN) wire/gen_peer_wire_csv
 devtools/gen_print_wire.c: $(WIRE_GEN) wire/gen_peer_wire_csv
 	$(WIRE_GEN) --bolt --printwire ${@:.c=.h} wire_type < wire/gen_peer_wire_csv > $@
 
-devtools/bolt11-cli: $(DEVTOOLS_OBJS) $(DEVTOOLS_COMMON_OBJS) $(JSMN_OBJS) $(CCAN_OBJS) $(BITCOIN_OBJS) wire/fromwire.o wire/towire.o devtools/bolt11-cli.o
+devtools/bolt11-cli: $(DEVTOOLS_OBJS) $(DEVTOOLS_COMMON_OBJS) $(JSMN_OBJS) $(CCAN_OBJS) $(BTCNANO_OBJS) wire/fromwire.o wire/towire.o devtools/bolt11-cli.o
 
-devtools/decodemsg: $(DEVTOOLS_OBJS) $(DEVTOOLS_COMMON_OBJS) $(JSMN_OBJS) $(CCAN_OBJS) $(BITCOIN_OBJS) wire/fromwire.o wire/towire.o devtools/decodemsg.o
+devtools/decodemsg: $(DEVTOOLS_OBJS) $(DEVTOOLS_COMMON_OBJS) $(JSMN_OBJS) $(CCAN_OBJS) $(BTCNANO_OBJS) wire/fromwire.o wire/towire.o devtools/decodemsg.o
 
 $(DEVTOOLS_OBJS) $(DEVTOOLS_TOOL_OBJS): wire/wire.h devtools/gen_print_wire.h
 devtools/gen_print_wire.o: devtools/gen_print_wire.h wire/gen_peer_wire.h
