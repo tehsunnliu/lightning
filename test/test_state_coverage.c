@@ -976,11 +976,11 @@ static void init_trail(struct trail *t,
 	t->pkt_sent = NULL;
 	if (input == CMD_SEND_HTLC_FULFILL
 	    || input == INPUT_RVALUE
-	    || input == BITCOIN_HTLC_TOTHEM_TIMEOUT
-	    || input == BITCOIN_HTLC_TOTHEM_SPENT
-	    || input == BITCOIN_HTLC_TOUS_TIMEOUT
-	    || input == BITCOIN_HTLC_FULFILL_SPEND_DONE
-	    || input == BITCOIN_HTLC_RETURN_SPEND_DONE)
+	    || input == BTCNANO_HTLC_TOTHEM_TIMEOUT
+	    || input == BTCNANO_HTLC_TOTHEM_SPENT
+	    || input == BTCNANO_HTLC_TOUS_TIMEOUT
+	    || input == BTCNANO_HTLC_FULFILL_SPEND_DONE
+	    || input == BTCNANO_HTLC_RETURN_SPEND_DONE)
 		t->htlc_id = idata->htlc->id;
 	else if (input == PKT_UPDATE_ADD_HTLC)
 		t->htlc_id = htlc_id_from_pkt(idata->pkt);
@@ -1184,9 +1184,9 @@ void peer_watch_anchor(struct peer *peer,
 		       enum state_input otherspent)
 {
 	/* We assume these values in activate_event. */
-	assert(timeout == BITCOIN_ANCHOR_TIMEOUT
+	assert(timeout == BTCNANO_ANCHOR_TIMEOUT
 	       || timeout == INPUT_NONE);
-	assert(depthok == BITCOIN_ANCHOR_DEPTHOK);
+	assert(depthok == BTCNANO_ANCHOR_DEPTHOK);
 
 	add_event(peer, depthok);
 	add_event(peer, timeout);
@@ -1198,7 +1198,7 @@ void peer_watch_anchor(struct peer *peer,
 void btcnano_create_anchor(struct peer *peer, enum state_input done)
 {
 	/* We assume this below */
-	assert(done == BITCOIN_ANCHOR_CREATED);
+	assert(done == BTCNANO_ANCHOR_CREATED);
 	if (peer->anchor)
 		report_trail(peer->trail, "Anchor already created?");
 
@@ -1220,9 +1220,9 @@ void peer_unwatch_anchor_depth(struct peer *peer,
 			       enum state_input timeout)
 {
 	/* We assume these values in activate_event. */
-	assert(timeout == BITCOIN_ANCHOR_TIMEOUT
+	assert(timeout == BTCNANO_ANCHOR_TIMEOUT
 	       || timeout == INPUT_NONE);
-	assert(depthok == BITCOIN_ANCHOR_DEPTHOK);
+	assert(depthok == BTCNANO_ANCHOR_DEPTHOK);
 
 	remove_event(peer, depthok);
 	remove_event(peer, timeout);
@@ -1244,14 +1244,14 @@ void peer_watch_tx(struct peer *peer,
 {
 	/* We can have multiple steals or spendtheirs in flight, so
 	 * allow repeats for
-	 * BITCOIN_STEAL_DONE/BITCOIN_SPEND_THEIRS_DONE */
-	if (done == BITCOIN_STEAL_DONE) {
+	 * BTCNANO_STEAL_DONE/BTCNANO_SPEND_THEIRS_DONE */
+	if (done == BTCNANO_STEAL_DONE) {
 		assert(btcnano_tx_is(tx, "steal"));
 		add_event_(peer, done);
-	} else if (done == BITCOIN_SPEND_THEIRS_DONE) {
+	} else if (done == BTCNANO_SPEND_THEIRS_DONE) {
 		assert(btcnano_tx_is(tx, "spend their commit"));
 		add_event_(peer, done);
-	} else if (done == BITCOIN_SPEND_OURS_DONE) {
+	} else if (done == BTCNANO_SPEND_OURS_DONE) {
 		assert(btcnano_tx_is(tx, "spend our commit"));
 		add_event(peer, done);
 	} else
@@ -1283,9 +1283,9 @@ bool peer_watch_our_htlc_outputs(struct peer *peer,
 				 enum state_input tothem_timeout)
 {
 	/* FIXME: We assume these. */
-	assert(tous_timeout == BITCOIN_HTLC_TOUS_TIMEOUT);
-	assert(tothem_spent == BITCOIN_HTLC_TOTHEM_SPENT);
-	assert(tothem_timeout == BITCOIN_HTLC_TOTHEM_TIMEOUT);
+	assert(tous_timeout == BTCNANO_HTLC_TOUS_TIMEOUT);
+	assert(tothem_spent == BTCNANO_HTLC_TOTHEM_SPENT);
+	assert(tothem_timeout == BTCNANO_HTLC_TOTHEM_TIMEOUT);
 
 	if (!peer->num_htlcs_to_us && !peer->num_htlcs_to_them)
 		return false;
@@ -1318,9 +1318,9 @@ bool peer_watch_their_htlc_outputs(struct peer *peer,
 	struct htlc *htlcs;
 
 	/* We assume these. */
-	assert(tous_timeout == BITCOIN_HTLC_TOUS_TIMEOUT);
-	assert(tothem_spent == BITCOIN_HTLC_TOTHEM_SPENT);
-	assert(tothem_timeout == BITCOIN_HTLC_TOTHEM_TIMEOUT);
+	assert(tous_timeout == BTCNANO_HTLC_TOUS_TIMEOUT);
+	assert(tothem_spent == BTCNANO_HTLC_TOTHEM_SPENT);
+	assert(tothem_timeout == BTCNANO_HTLC_TOTHEM_TIMEOUT);
 
 	/* It's what our peer thinks is current... */
 	if (!peer->other->num_htlcs_to_them && !peer->other->num_htlcs_to_us)
@@ -1413,9 +1413,9 @@ void peer_watch_htlc_spend(struct peer *peer,
 
 	/* We assume this */
 	if (h->to_them)
-		assert(done == BITCOIN_HTLC_RETURN_SPEND_DONE);
+		assert(done == BTCNANO_HTLC_RETURN_SPEND_DONE);
 	else
-		assert(done == BITCOIN_HTLC_FULFILL_SPEND_DONE);
+		assert(done == BTCNANO_HTLC_FULFILL_SPEND_DONE);
 }
 
 void peer_unwatch_htlc_spend(struct peer *peer,
@@ -1693,11 +1693,11 @@ static bool normal_path(enum state_input i, enum state src, enum state dst)
 		return false;
 
 	/* Weird inputs. */
-	if (i == BITCOIN_ANCHOR_TIMEOUT
-	    || i == BITCOIN_ANCHOR_UNSPENT
-	    || i == BITCOIN_ANCHOR_THEIRSPEND
-	    || i == BITCOIN_ANCHOR_OTHERSPEND
-	    || i == BITCOIN_STEAL_DONE
+	if (i == BTCNANO_ANCHOR_TIMEOUT
+	    || i == BTCNANO_ANCHOR_UNSPENT
+	    || i == BTCNANO_ANCHOR_THEIRSPEND
+	    || i == BTCNANO_ANCHOR_OTHERSPEND
+	    || i == BTCNANO_STEAL_DONE
 	    || i == PKT_UPDATE_DECLINE_HTLC
 	    || i == PKT_UPDATE_FAIL_HTLC
 	    || i == INPUT_CLOSE_COMPLETE_TIMEOUT)
@@ -1826,11 +1826,11 @@ static void try_input(const struct peer *peer,
 	copy.trail = &t;
 
 	/* The anchor is resolved in some way by these. */
-	if (i == BITCOIN_ANCHOR_UNSPENT
-	    || i == BITCOIN_ANCHOR_TIMEOUT
-	    || i == BITCOIN_ANCHOR_THEIRSPEND
-	    || i == BITCOIN_ANCHOR_OTHERSPEND
-	    || i == BITCOIN_CLOSE_DONE)
+	if (i == BTCNANO_ANCHOR_UNSPENT
+	    || i == BTCNANO_ANCHOR_TIMEOUT
+	    || i == BTCNANO_ANCHOR_THEIRSPEND
+	    || i == BTCNANO_ANCHOR_OTHERSPEND
+	    || i == BTCNANO_CLOSE_DONE)
 		copy.anchor_spent = true;
 
 	eliminate_input(&hist->inputs_per_state[copy.state], i);
@@ -1886,7 +1886,7 @@ static void try_input(const struct peer *peer,
 		/*
 		 * We expect to loop if:
 		 * 1) We deferred, OR
-		 * 2) We get repeated BITCOIN_ANCHOR_OTHERSPEND/THEIRSPEND, OR
+		 * 2) We get repeated BTCNANO_ANCHOR_OTHERSPEND/THEIRSPEND, OR
 		 * 3) We pass through NORMAL state.
 		 *
 		 * And if we're being quick, always stop.
@@ -1895,8 +1895,8 @@ static void try_input(const struct peer *peer,
 		    || cstatus == CMD_REQUEUE
 		    || copy.state == STATE_NORMAL_LOWPRIO
 		    || copy.state == STATE_NORMAL_HIGHPRIO
-		    || i == BITCOIN_ANCHOR_OTHERSPEND
-		    || i == BITCOIN_ANCHOR_THEIRSPEND
+		    || i == BTCNANO_ANCHOR_OTHERSPEND
+		    || i == BTCNANO_ANCHOR_THEIRSPEND
 		    || quick) {
 			tal_free(ctx);
 			return;
@@ -1962,33 +1962,33 @@ static void activate_event(struct peer *peer, enum state_input i)
 {
 	/* Events are not independent. */
 	switch (i) {
-	case BITCOIN_ANCHOR_DEPTHOK:
+	case BTCNANO_ANCHOR_DEPTHOK:
 		/* Can't sent TIMEOUT (may not be set) */
-		remove_event_(&peer->core.event_notifies, BITCOIN_ANCHOR_TIMEOUT);
+		remove_event_(&peer->core.event_notifies, BTCNANO_ANCHOR_TIMEOUT);
 		break;
-	case BITCOIN_ANCHOR_TIMEOUT:
+	case BTCNANO_ANCHOR_TIMEOUT:
 		/* Can't sent DEPTHOK */
-		remove_event(peer, BITCOIN_ANCHOR_DEPTHOK);
+		remove_event(peer, BTCNANO_ANCHOR_DEPTHOK);
 		break;
 	/* And of the "done" cases means we won't give the others. */
-	case BITCOIN_SPEND_THEIRS_DONE:
-	case BITCOIN_SPEND_OURS_DONE:
-	case BITCOIN_STEAL_DONE:
-	case BITCOIN_CLOSE_DONE:
+	case BTCNANO_SPEND_THEIRS_DONE:
+	case BTCNANO_SPEND_OURS_DONE:
+	case BTCNANO_STEAL_DONE:
+	case BTCNANO_CLOSE_DONE:
 		remove_event_(&peer->core.event_notifies,
-			      BITCOIN_SPEND_OURS_DONE);
+			      BTCNANO_SPEND_OURS_DONE);
 		remove_event_(&peer->core.event_notifies,
-			      BITCOIN_SPEND_THEIRS_DONE);
-		remove_event_(&peer->core.event_notifies, BITCOIN_STEAL_DONE);
-		remove_event_(&peer->core.event_notifies, BITCOIN_CLOSE_DONE);
+			      BTCNANO_SPEND_THEIRS_DONE);
+		remove_event_(&peer->core.event_notifies, BTCNANO_STEAL_DONE);
+		remove_event_(&peer->core.event_notifies, BTCNANO_CLOSE_DONE);
 		remove_event_(&peer->core.event_notifies,
-			      BITCOIN_ANCHOR_OURCOMMIT_DELAYPASSED);
+			      BTCNANO_ANCHOR_OURCOMMIT_DELAYPASSED);
 		remove_event_(&peer->core.event_notifies,
-			      BITCOIN_ANCHOR_THEIRSPEND);
+			      BTCNANO_ANCHOR_THEIRSPEND);
 		remove_event_(&peer->core.event_notifies,
-			      BITCOIN_ANCHOR_OTHERSPEND);
+			      BTCNANO_ANCHOR_OTHERSPEND);
 		remove_event_(&peer->core.event_notifies,
-			      BITCOIN_ANCHOR_UNSPENT);
+			      BTCNANO_ANCHOR_UNSPENT);
 		break;
 	default:
 		;
@@ -1998,20 +1998,20 @@ static void activate_event(struct peer *peer, enum state_input i)
 static bool can_refire(enum state_input i)
 {
 	/* They could have lots of old HTLCS */
-	if (i == BITCOIN_ANCHOR_OTHERSPEND)
+	if (i == BTCNANO_ANCHOR_OTHERSPEND)
 		return true;
  	/* Signature malleability means any number of these */
-	if (i == BITCOIN_ANCHOR_THEIRSPEND)
+	if (i == BTCNANO_ANCHOR_THEIRSPEND)
 		return true;
 
 	/* They could have lots of htlcs. */
-	if (i == BITCOIN_HTLC_TOTHEM_SPENT || i == BITCOIN_HTLC_TOTHEM_TIMEOUT
-	    || i == BITCOIN_HTLC_TOUS_TIMEOUT)
+	if (i == BTCNANO_HTLC_TOTHEM_SPENT || i == BTCNANO_HTLC_TOTHEM_TIMEOUT
+	    || i == BTCNANO_HTLC_TOUS_TIMEOUT)
 		return true;
 
 	/* We manually remove these if they're not watching any more spends */
-	if (i == BITCOIN_HTLC_RETURN_SPEND_DONE
-	    || i == BITCOIN_HTLC_FULFILL_SPEND_DONE)
+	if (i == BTCNANO_HTLC_RETURN_SPEND_DONE
+	    || i == BTCNANO_HTLC_FULFILL_SPEND_DONE)
 		return true;
 
 	return false;
@@ -2142,18 +2142,18 @@ static void run_peer(const struct peer *peer,
 				  idata, normalpath, errorpath,
 				  prev_trail, hist);
 		}
-		try_input(&copy, BITCOIN_HTLC_TOUS_TIMEOUT,
+		try_input(&copy, BTCNANO_HTLC_TOUS_TIMEOUT,
 			  idata, normalpath, errorpath,
 			  prev_trail, hist);
 	}
 
 	for (i = 0; i < peer->num_live_htlcs_to_them; i++) {
 		idata->btc = (struct btcnano_event *)&copy.live_htlcs_to_them[i];
-		try_input(&copy, BITCOIN_HTLC_TOTHEM_SPENT,
+		try_input(&copy, BTCNANO_HTLC_TOTHEM_SPENT,
 			  idata, normalpath, errorpath,
 			  prev_trail, hist);
 		idata->htlc = (struct htlc *)&copy.live_htlcs_to_them[i];
-		try_input(&copy, BITCOIN_HTLC_TOTHEM_TIMEOUT,
+		try_input(&copy, BTCNANO_HTLC_TOTHEM_TIMEOUT,
 			  idata, normalpath, errorpath,
 			  prev_trail, hist);
 	}
@@ -2161,13 +2161,13 @@ static void run_peer(const struct peer *peer,
 	/* If they're watching HTLC spends, we can send events. */
 	for (i = 0; i < peer->num_htlc_spends_to_us; i++) {
 		idata->htlc = (struct htlc *)&copy.htlc_spends_to_us[i];
-		try_input(&copy, BITCOIN_HTLC_FULFILL_SPEND_DONE,
+		try_input(&copy, BTCNANO_HTLC_FULFILL_SPEND_DONE,
 			  idata, normalpath, errorpath,
 			  prev_trail, hist);
 	}
 	for (i = 0; i < peer->num_htlc_spends_to_them; i++) {
 		idata->htlc = (struct htlc *)&copy.htlc_spends_to_them[i];
-		try_input(&copy, BITCOIN_HTLC_RETURN_SPEND_DONE,
+		try_input(&copy, BTCNANO_HTLC_RETURN_SPEND_DONE,
 			  idata, normalpath, errorpath,
 			  prev_trail, hist);
 	}
