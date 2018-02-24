@@ -50,8 +50,8 @@ void printwire_u8_array(const u8 **cursor, size_t *plen, size_t len)
 #define PRINTWIRE_STRUCT_TYPE_TO_STRING(T) \
 	PRINTWIRE_TYPE_TO_STRING(struct T, T)
 
-PRINTWIRE_STRUCT_TYPE_TO_STRING(bitcoin_blkid);
-PRINTWIRE_STRUCT_TYPE_TO_STRING(bitcoin_txid);
+PRINTWIRE_STRUCT_TYPE_TO_STRING(btcnano_blkid);
+PRINTWIRE_STRUCT_TYPE_TO_STRING(btcnano_txid);
 PRINTWIRE_STRUCT_TYPE_TO_STRING(channel_id);
 PRINTWIRE_STRUCT_TYPE_TO_STRING(preimage);
 PRINTWIRE_STRUCT_TYPE_TO_STRING(pubkey);
