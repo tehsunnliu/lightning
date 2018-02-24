@@ -300,11 +300,11 @@ void json_add_pubkey(struct json_result *response,
 }
 
 void json_add_txid(struct json_result *result, const char *fieldname,
-		   const struct bitcoin_txid *txid)
+		   const struct btcnano_txid *txid)
 {
 	char hex[hex_str_size(sizeof(*txid))];
 
-	bitcoin_txid_to_hex(txid, hex, sizeof(hex));
+	btcnano_txid_to_hex(txid, hex, sizeof(hex));
 	json_add_string(result, fieldname, hex);
 }
 
