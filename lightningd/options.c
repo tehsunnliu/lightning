@@ -1,4 +1,4 @@
-#include <bitcoin/chainparams.h>
+#include <btcnano/chainparams.h>
 #include <ccan/array_size/array_size.h>
 #include <ccan/err/err.h>
 #include <ccan/mem/mem.h>
@@ -15,7 +15,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <lightningd/bitcoind.h>
+#include <lightningd/btcnanod.h>
 #include <lightningd/chaintopology.h>
 #include <lightningd/jsonrpc.h>
 #include <lightningd/lightningd.h>
@@ -144,8 +144,8 @@ static void opt_show_u16(char buf[OPT_SHOW_LEN], const u16 *u)
 
 static char *opt_set_network(const char *arg, struct lightningd *ld)
 {
-	ld->topology->bitcoind->chainparams = chainparams_for_network(arg);
-	if (!ld->topology->bitcoind->chainparams)
+	ld->topology->btcnanod->chainparams = chainparams_for_network(arg);
+	if (!ld->topology->btcnanod->chainparams)
 		return tal_fmt(NULL, "Unknown network name '%s'", arg);
 	return NULL;
 }
@@ -253,7 +253,7 @@ static void config_register_opts(struct lightningd *ld)
 	opt_register_arg("--max-htlc-expiry", opt_set_u32, opt_show_u32,
 			 &ld->config.max_htlc_expiry,
 			 "Maximum number of blocks to accept an HTLC before expiry");
-	opt_register_arg("--bitcoind-poll", opt_set_time, opt_show_time,
+	opt_register_arg("--btcnanod-poll", opt_set_time, opt_show_time,
 			 &ld->config.poll_time,
 			 "Time between polling for new transactions");
 	opt_register_arg("--commit-time", opt_set_time, opt_show_time,
@@ -271,7 +271,7 @@ static void config_register_opts(struct lightningd *ld)
 
 	opt_register_early_arg("--network", opt_set_network, opt_show_network,
 			       ld,
-			       "Select the network parameters (bitcoin, testnet,"
+			       "Select the network parameters (btcnano, testnet,"
 			       " regtest, litecoin or litecoin-testnet)");
 	opt_register_arg("--allow-deprecated-apis",
 			 opt_set_bool_arg, opt_show_bool,
@@ -343,7 +343,7 @@ static const struct config testnet_config = {
 	/* Don't lock up channel for more than 5 days. */
 	.max_htlc_expiry = 5 * 6 * 24,
 
-	/* How often to bother bitcoind. */
+	/* How often to bother btcnanod. */
 	.poll_time = TIME_FROM_SEC(10),
 
 	/* Send commit 10msec after receiving; almost immediately. */
@@ -404,7 +404,7 @@ static const struct config mainnet_config = {
 	/* Don't lock up channel for more than 5 days. */
 	.max_htlc_expiry = 5 * 6 * 24,
 
-	/* How often to bother bitcoind. */
+	/* How often to bother btcnanod. */
 	.poll_time = TIME_FROM_SEC(30),
 
 	/* Send commit 10msec after receiving; almost immediately. */
@@ -530,7 +530,7 @@ void register_opts(struct lightningd *ld)
 
 	opt_register_early_noarg("--help|-h", opt_usage_and_exit,
 				 "\n"
-				 "A bitcoin lightning daemon.",
+				 "A btcnano lightning daemon.",
 				 "Print this message.");
 	opt_register_early_noarg("--test-daemons-only",
 				 test_daemons_and_exit,
@@ -540,23 +540,23 @@ void register_opts(struct lightningd *ld)
          * before --ipaddr which may depend on it */
 	opt_register_early_arg("--port", opt_set_u16, opt_show_u16, &ld->portnum,
 			       "Port to bind to (0 means don't listen)");
-	opt_register_arg("--bitcoin-datadir", opt_set_talstr, NULL,
-			 &ld->topology->bitcoind->datadir,
-			 "-datadir arg for bitcoin-cli");
+	opt_register_arg("--btcnano-datadir", opt_set_talstr, NULL,
+			 &ld->topology->btcnanod->datadir,
+			 "-datadir arg for btcnano-cli");
 	opt_register_arg("--rgb", opt_set_rgb, NULL, ld,
 			 "RRGGBB hex color for node");
 	opt_register_arg("--alias", opt_set_alias, NULL, ld,
 			 "Up to 32-byte alias for node");
 
-	opt_register_arg("--bitcoin-rpcuser", opt_set_talstr, NULL,
-			 &ld->topology->bitcoind->rpcuser,
-			 "bitcoind RPC username");
-	opt_register_arg("--bitcoin-rpcpassword", opt_set_talstr, NULL,
-			 &ld->topology->bitcoind->rpcpass,
-			 "bitcoind RPC password");
-	opt_register_arg("--bitcoin-rpcconnect", opt_set_talstr, NULL,
-			 &ld->topology->bitcoind->rpcconnect,
-			 "bitcoind RPC host to connect to");
+	opt_register_arg("--btcnano-rpcuser", opt_set_talstr, NULL,
+			 &ld->topology->btcnanod->rpcuser,
+			 "btcnanod RPC username");
+	opt_register_arg("--btcnano-rpcpassword", opt_set_talstr, NULL,
+			 &ld->topology->btcnanod->rpcpass,
+			 "btcnanod RPC password");
+	opt_register_arg("--btcnano-rpcconnect", opt_set_talstr, NULL,
+			 &ld->topology->btcnanod->rpcconnect,
+			 "btcnanod RPC host to connect to");
 
 	opt_register_arg(
 	    "--channel-update-interval=<s>", opt_set_u32, opt_show_u32,
