@@ -5,9 +5,9 @@
 #include "../../common/initial_commit_tx.c"
 #include "../../channeld/commit_tx.c"
 #include "../../common/htlc_tx.c"
-#include <bitcoin/preimage.h>
-#include <bitcoin/privkey.h>
-#include <bitcoin/pubkey.h>
+#include <btcnano/preimage.h>
+#include <btcnano/privkey.h>
+#include <btcnano/pubkey.h>
 #include <ccan/err/err.h>
 #include <ccan/str/hex/hex.h>
 #include <common/sphinx.h>
@@ -26,19 +26,19 @@ void status_fmt(enum log_level level, const char *fmt, ...)
 
 const void *trc;
 
-/* bitcoind loves its backwards txids! */
-static struct bitcoin_txid txid_from_hex(const char *hex)
+/* btcnanod loves its backwards txids! */
+static struct btcnano_txid txid_from_hex(const char *hex)
 {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 
-	if (!bitcoin_txid_from_hex(hex, strlen(hex), &txid))
+	if (!btcnano_txid_from_hex(hex, strlen(hex), &txid))
 		abort();
 	return txid;
 }
 
-static struct bitcoin_tx *tx_from_hex(const tal_t *ctx, const char *hex)
+static struct btcnano_tx *tx_from_hex(const tal_t *ctx, const char *hex)
 {
-	return bitcoin_tx_from_hex(ctx, hex, strlen(hex));
+	return btcnano_tx_from_hex(ctx, hex, strlen(hex));
 }
 
 /* BOLT #3:
@@ -178,8 +178,8 @@ static struct pubkey pubkey_from_hex(const char *hex)
 	return pubkey;
 }
 
-static void tx_must_be_eq(const struct bitcoin_tx *a,
-			  const struct bitcoin_tx *b)
+static void tx_must_be_eq(const struct btcnano_tx *a,
+			  const struct btcnano_tx *b)
 {
 	tal_t *tmpctx = tal_tmpctx(NULL);
 	u8 *lina, *linb;
@@ -212,7 +212,7 @@ static void tx_must_be_eq(const struct bitcoin_tx *a,
 	tal_free(tmpctx);
 }
 
-static void txs_must_be_eq(struct bitcoin_tx **a, struct bitcoin_tx **b)
+static void txs_must_be_eq(struct btcnano_tx **a, struct btcnano_tx **b)
 {
 	size_t i;
 
@@ -320,7 +320,7 @@ static void update_feerate(struct channel *channel, u32 feerate)
 int main(void)
 {
 	tal_t *tmpctx = tal_tmpctx(NULL);
-	struct bitcoin_txid funding_txid;
+	struct btcnano_txid funding_txid;
 	/* We test from both sides. */
 	struct channel *lchannel, *rchannel;
 	u64 funding_amount_satoshi;
@@ -331,7 +331,7 @@ int main(void)
 	struct pubkey local_per_commitment_point;
 	struct basepoints localbase, remotebase;
 	struct pubkey *unknown = tal(tmpctx, struct pubkey);
-	struct bitcoin_tx *raw_tx, **txs, **txs2;
+	struct btcnano_tx *raw_tx, **txs, **txs2;
 	struct channel_config *local_config = tal(tmpctx, struct channel_config);
 	struct channel_config *remote_config = tal(tmpctx, struct channel_config);
 	u64 to_local_msat, to_remote_msat;
@@ -353,7 +353,7 @@ int main(void)
          *    to *local* are delayed
 	 * - we assume that *local* is the funder
 	 * - private keys are displayed as 32 bytes plus a trailing 1
-         *    (bitcoin's convention for "compressed" private keys, i.e. keys
+         *    (btcnano's convention for "compressed" private keys, i.e. keys
          *    for which the public key is compressed)
 	 *
 	 * - transaction signatures are all deterministic, using
