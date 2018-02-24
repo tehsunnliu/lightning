@@ -9,9 +9,9 @@ static bool print_superverbose;
 #include "../../channeld/commit_tx.c"
 #include "../../common/initial_commit_tx.c"
 #include "../../common/htlc_tx.c"
-#include <bitcoin/preimage.h>
-#include <bitcoin/privkey.h>
-#include <bitcoin/pubkey.h>
+#include <btcnano/preimage.h>
+#include <btcnano/privkey.h>
+#include <btcnano/pubkey.h>
 #include <ccan/array_size/array_size.h>
 #include <ccan/err/err.h>
 #include <ccan/str/hex/hex.h>
@@ -19,12 +19,12 @@ static bool print_superverbose;
 /* Turn this on to brute-force fee values */
 /*#define DEBUG */
 
-/* bitcoind loves its backwards txids! */
-static struct bitcoin_txid txid_from_hex(const char *hex)
+/* btcnanod loves its backwards txids! */
+static struct btcnano_txid txid_from_hex(const char *hex)
 {
-	struct bitcoin_txid txid;
+	struct btcnano_txid txid;
 
-	if (!bitcoin_txid_from_hex(hex, strlen(hex), &txid))
+	if (!btcnano_txid_from_hex(hex, strlen(hex), &txid))
 		abort();
 	return txid;
 }
@@ -38,7 +38,7 @@ static struct secret secret_from_hex(const char *hex)
 	len = strlen(hex);
 	/* BOLT #3:
 	 *
-	 * private keys are displayed as 32 bytes plus a trailing 1 (bitcoin's
+	 * private keys are displayed as 32 bytes plus a trailing 1 (btcnano's
 	 * convention for "compressed" private keys, i.e. keys for which the
 	 * public key is compressed)
 	 */
@@ -57,8 +57,8 @@ static bool pubkey_from_secret(const struct secret *secret,
 					  secret->data);
 }
 
-static void tx_must_be_eq(const struct bitcoin_tx *a,
-			  const struct bitcoin_tx *b)
+static void tx_must_be_eq(const struct btcnano_tx *a,
+			  const struct btcnano_tx *b)
 {
 	tal_t *tmpctx = tal_tmpctx(NULL);
 	u8 *lina, *linb;
@@ -176,7 +176,7 @@ static struct pubkey pubkey_from_hex(const char *hex)
 }
 #endif
 
-static void report_htlcs(const struct bitcoin_tx *tx,
+static void report_htlcs(const struct btcnano_tx *tx,
 			 const struct htlc **htlc_map,
 			 u16 to_self_delay,
 			 const struct privkey *local_htlcsecretkey,
@@ -191,18 +191,18 @@ static void report_htlcs(const struct bitcoin_tx *tx,
 {
 	tal_t *tmpctx = tal_tmpctx(NULL);
 	size_t i, n;
-	struct bitcoin_txid txid;
-	struct bitcoin_tx **htlc_tx;
+	struct btcnano_txid txid;
+	struct btcnano_tx **htlc_tx;
 	secp256k1_ecdsa_signature *remotehtlcsig;
 	struct keyset keyset;
 	u8 **wscript;
 
-	htlc_tx = tal_arrz(tmpctx, struct bitcoin_tx *, tal_count(htlc_map));
+	htlc_tx = tal_arrz(tmpctx, struct btcnano_tx *, tal_count(htlc_map));
 	remotehtlcsig = tal_arr(tmpctx, secp256k1_ecdsa_signature,
 				tal_count(htlc_map));
 	wscript = tal_arr(tmpctx, u8 *, tal_count(htlc_map));
 
-	bitcoin_txid(tx, &txid);
+	btcnano_txid(tx, &txid);
 
 	/* First report remote signatures, in order we would receive them. */
 	n = 0;
@@ -233,7 +233,7 @@ static void report_htlcs(const struct bitcoin_tx *tx,
 						     to_self_delay,
 						     feerate_per_kw,
 						     &keyset);
-			wscript[i] = bitcoin_wscript_htlc_offer(tmpctx,
+			wscript[i] = btcnano_wscript_htlc_offer(tmpctx,
 								local_htlckey,
 								remote_htlckey,
 								&htlc->rhash,
@@ -244,7 +244,7 @@ static void report_htlcs(const struct bitcoin_tx *tx,
 						     to_self_delay,
 						     feerate_per_kw,
 						     &keyset);
-			wscript[i] = bitcoin_wscript_htlc_receive(tmpctx,
+			wscript[i] = btcnano_wscript_htlc_receive(tmpctx,
 								  &htlc->expiry,
 								  local_htlckey,
 								  remote_htlckey,
@@ -304,7 +304,7 @@ static void report_htlcs(const struct bitcoin_tx *tx,
 	tal_free(tmpctx);
 }
 
-static void report(struct bitcoin_tx *tx,
+static void report(struct btcnano_tx *tx,
 		   const u8 *wscript,
 		   const struct privkey *x_remote_funding_privkey,
 		   const struct pubkey *remote_funding_pubkey,
@@ -340,7 +340,7 @@ static void report(struct bitcoin_tx *tx,
 		      &localsig);
 	printf("# local_signature = %s\n",
 	       type_to_string(tmpctx, secp256k1_ecdsa_signature, &localsig));
-	tx->input[0].witness = bitcoin_witness_2of2(tx->input,
+	tx->input[0].witness = btcnano_witness_2of2(tx->input,
 						    &localsig, &remotesig,
 						    local_funding_pubkey,
 						    remote_funding_pubkey);
@@ -358,7 +358,7 @@ static void report(struct bitcoin_tx *tx,
 }
 
 #ifdef DEBUG
-static u64 calc_fee(const struct bitcoin_tx *tx, u64 input_satoshi)
+static u64 calc_fee(const struct btcnano_tx *tx, u64 input_satoshi)
 {
 	size_t i;
 	u64 output_satoshi = 0;
@@ -426,7 +426,7 @@ static const struct htlc **invert_htlcs(const struct htlc **htlcs)
 int main(void)
 {
 	tal_t *tmpctx = tal_tmpctx(NULL);
-	struct bitcoin_txid funding_txid;
+	struct btcnano_txid funding_txid;
 	u64 funding_amount_satoshi, dust_limit_satoshi;
 	u32 feerate_per_kw;
 	u16 to_self_delay;
@@ -449,7 +449,7 @@ int main(void)
 	struct pubkey local_htlckey, remote_htlckey;
 	struct pubkey local_delayedkey;
 	struct pubkey remote_revocation_key;
-	struct bitcoin_tx *tx, *tx2;
+	struct btcnano_tx *tx, *tx2;
 	struct keyset keyset;
 	u8 *wscript;
 	unsigned int funding_output_index;
@@ -469,7 +469,7 @@ int main(void)
          *    to *local* are delayed
 	 * - we assume that *local* is the funder
 	 * - private keys are displayed as 32 bytes plus a trailing 1
-         *    (bitcoin's convention for "compressed" private keys, i.e. keys
+         *    (btcnano's convention for "compressed" private keys, i.e. keys
          *    for which the public key is compressed)
 	 *
 	 * - transaction signatures are all deterministic, using
@@ -679,7 +679,7 @@ int main(void)
 	printf("remote_revocation_key: %s\n",
 	       type_to_string(tmpctx, struct pubkey, &remote_revocation_key));
 
-	wscript = bitcoin_redeem_2of2(tmpctx, &local_funding_pubkey,
+	wscript = btcnano_redeem_2of2(tmpctx, &local_funding_pubkey,
 				      &remote_funding_pubkey);
 	printf("# funding wscript = %s\n", tal_hex(tmpctx, wscript));
 
@@ -800,7 +800,7 @@ int main(void)
 	       htlc_map);
 
 	do {
-		struct bitcoin_tx *newtx;
+		struct btcnano_tx *newtx;
 
 		feerate_per_kw = increase(feerate_per_kw);
 		print_superverbose = false;
