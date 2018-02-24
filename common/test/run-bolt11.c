@@ -147,7 +147,7 @@ int main(void)
 	 *
 	 * Breakdown:
 	 *
-	 * * `lnbc`: prefix, lightning on bitcoin mainnet
+	 * * `lnbc`: prefix, lightning on btcnano mainnet
 	 * * `1`: Bech32 separator
 	 * * `pvjluez`: timestamp (1496314658)
 	 * * `p`: payment hash
@@ -160,7 +160,7 @@ int main(void)
 	 * * `ca784w`: Bech32 checksum
 	 */
 	b11 = new_bolt11(ctx, NULL);
-	b11->chain = chainparams_for_network("bitcoin");
+	b11->chain = chainparams_for_network("btcnano");
 	b11->timestamp = 1496314658;
 	if (!hex_decode("0001020304050607080900010203040506070809000102030405060708090102",
 			strlen("0001020304050607080900010203040506070809000102030405060708090102"),
@@ -178,8 +178,8 @@ int main(void)
 	 *
 	 * Breakdown:
 	 *
-	 * * `lnbc`: prefix, lightning on bitcoin mainnet
-	 * * `2500u`: amount (2500 micro-bitcoin)
+	 * * `lnbc`: prefix, lightning on btcnano mainnet
+	 * * `2500u`: amount (2500 micro-btcnano)
 	 * * `1`: Bech32 separator
 	 * * `pvjluez`: timestamp (1496314658)
 	 * * `p`: payment hash...
@@ -194,7 +194,7 @@ int main(void)
 	 */
 	msatoshi = 2500 * (1000ULL * 100000000) / 1000000;
 	b11 = new_bolt11(ctx, &msatoshi);
-	b11->chain = chainparams_for_network("bitcoin");
+	b11->chain = chainparams_for_network("btcnano");
 	b11->timestamp = 1496314658;
 	if (!hex_decode("0001020304050607080900010203040506070809000102030405060708090102",
 			strlen("0001020304050607080900010203040506070809000102030405060708090102"),
@@ -213,8 +213,8 @@ int main(void)
 	 *
 	 * Breakdown:
 	 *
-	 * * `lnbc`: prefix, lightning on bitcoin mainnet
-	 * * `20m`: amount (20 milli-bitcoin)
+	 * * `lnbc`: prefix, lightning on btcnano mainnet
+	 * * `20m`: amount (20 milli-btcnano)
 	 * * `1`: Bech32 separator
 	 * * `pvjluez`: timestamp (1496314658)
 	 * * `p`: payment hash...
@@ -226,7 +226,7 @@ int main(void)
 	 */
 	msatoshi = 20 * (1000ULL * 100000000) / 1000;
 	b11 = new_bolt11(ctx, &msatoshi);
-	b11->chain = chainparams_for_network("bitcoin");
+	b11->chain = chainparams_for_network("btcnano");
 	b11->timestamp = 1496314658;
 	if (!hex_decode("0001020304050607080900010203040506070809000102030405060708090102",
 			strlen("0001020304050607080900010203040506070809000102030405060708090102"),
