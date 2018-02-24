@@ -7,7 +7,7 @@
 
 // issue #577
 
-static void do_json_tok_bitcoin_amount(const char* val, uint64_t expected)
+static void do_json_tok_btcnano_amount(const char* val, uint64_t expected)
 {
 	uint64_t amount;
 	jsmntok_t tok;
@@ -15,24 +15,24 @@ static void do_json_tok_bitcoin_amount(const char* val, uint64_t expected)
 	tok.start = 0;
 	tok.end = strlen(val);
 
-	fprintf(stderr, "do_json_tok_bitcoin_amount(\"%s\", %"PRIu64"): ", val, expected);
+	fprintf(stderr, "do_json_tok_btcnano_amount(\"%s\", %"PRIu64"): ", val, expected);
 
-	assert(json_tok_bitcoin_amount(val, &tok, &amount) == true);
+	assert(json_tok_btcnano_amount(val, &tok, &amount) == true);
 	assert(amount == expected);
 
 	fprintf(stderr, "ok\n");
 }
 
 
-static int test_json_tok_bitcoin_amount(void)
+static int test_json_tok_btcnano_amount(void)
 {
-	do_json_tok_bitcoin_amount("0.00000001", 1);
-	do_json_tok_bitcoin_amount("0.00000007", 7);
-	do_json_tok_bitcoin_amount("0.00000008", 8);
-	do_json_tok_bitcoin_amount("0.00000010", 10);
-	do_json_tok_bitcoin_amount("0.12345678", 12345678);
-	do_json_tok_bitcoin_amount("0.01234567", 1234567);
-	do_json_tok_bitcoin_amount("123.45678900", 12345678900);
+	do_json_tok_btcnano_amount("0.00000001", 1);
+	do_json_tok_btcnano_amount("0.00000007", 7);
+	do_json_tok_btcnano_amount("0.00000008", 8);
+	do_json_tok_btcnano_amount("0.00000010", 10);
+	do_json_tok_btcnano_amount("0.12345678", 12345678);
+	do_json_tok_btcnano_amount("0.01234567", 1234567);
+	do_json_tok_btcnano_amount("123.45678900", 12345678900);
 
 	return 0;
 }
@@ -111,7 +111,7 @@ static void test_json_escape(void)
 
 int main(void)
 {
-	test_json_tok_bitcoin_amount();
+	test_json_tok_btcnano_amount();
 	test_json_filter();
 	test_json_escape();
 }
