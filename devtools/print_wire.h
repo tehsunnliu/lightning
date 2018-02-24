@@ -1,6 +1,6 @@
 #ifndef LIGHTNING_DEVTOOLS_PRINT_WIRE_H
 #define LIGHTNING_DEVTOOLS_PRINT_WIRE_H
-#include <bitcoin/preimage.h>
+#include <btcnano/preimage.h>
 #include <btcnano/tx.h>
 #include <wire/gen_peer_wire.h>
 
