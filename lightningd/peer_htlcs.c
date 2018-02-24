@@ -895,7 +895,7 @@ static bool changed_htlc(struct peer *peer,
 }
 
 static bool peer_save_commitsig_received(struct peer *peer, u64 commitnum,
-					 struct bitcoin_tx *tx,
+					 struct btcnano_tx *tx,
 					 const secp256k1_ecdsa_signature *commit_sig)
 {
 	if (commitnum != peer->next_index[LOCAL]) {
@@ -1081,7 +1081,7 @@ void peer_got_commitsig(struct peer *peer, const u8 *msg)
 	struct fulfilled_htlc *fulfilled;
 	struct failed_htlc *failed;
 	struct changed_htlc *changed;
-	struct bitcoin_tx *tx = tal(msg, struct bitcoin_tx);
+	struct btcnano_tx *tx = tal(msg, struct btcnano_tx);
 	size_t i;
 
 	if (!fromwire_channel_got_commitsig(msg, msg, NULL,
