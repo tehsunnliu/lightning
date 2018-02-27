@@ -221,8 +221,7 @@ static void remove_stopper(struct btcnano_cli *bcli)
 }
 
 /* If ctx is non-NULL, and is freed before we return, we don't call process() */
-static void
-start_btcnano_cli(struct btcnanod *btcnanod,
+static void start_btcnano_cli(struct btcnanod *btcnanod,
 		  const tal_t *ctx,
 		  void (*process)(struct btcnano_cli *),
 		  bool nonzero_exit_ok,
@@ -381,16 +380,12 @@ void btcnanod_sendrawtx_(struct btcnanod *btcnanod,
 static void process_rawblock(struct btcnano_cli *bcli)
 {
 	struct btcnano_block *blk;
-	void (*cb)(struct btcnanod *btcnanod,
-		   struct btcnano_block *blk,
-		   void *arg) = bcli->cb;
+	void (*cb)(struct btcnanod *btcnanod, struct btcnano_block *blk, void *arg) = bcli->cb;
 
 	/* FIXME: Just get header if we can't get full block. */
 	blk = btcnano_block_from_hex(bcli, bcli->output, bcli->output_bytes);
 	if (!blk)
-		fatal("%s: bad block '%.*s'?",
-		      bcli_args(bcli),
-		      (int)bcli->output_bytes, (char *)bcli->output);
+		fatal("%s: bad block '%.*s'?", bcli_args(bcli), (int)bcli->output_bytes, (char *)bcli->output);
 
 	cb(bcli->btcnanod, blk, bcli->cb_arg);
 }
